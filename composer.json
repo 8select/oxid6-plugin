@@ -1,0 +1,15 @@
+{
+  "name": "asign/8select",
+  "description": "Module for 8select Curated Shopping Engine (CSE)",
+  "type": "oxideshop-module",
+  "keywords": [
+    "oxid",
+    "modules",
+    "a-sign",
+    "8select"
+  ],
+  "homepage": "https://gitlab.com/a-sign/oxid-modules/8select",
+  "require": {
+    "aws/aws-sdk-php": "^3.62"
+  }
+}
