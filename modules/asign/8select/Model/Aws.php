@@ -11,9 +11,9 @@ use Aws\S3\Exception\S3Exception;
  */
 class Aws extends \OxidEsales\Eshop\Core\Model\BaseModel
 {
-    CONST CREDENTIAL_PROD_BUCKET_URL = 'productfeed.8select.io';
-    CONST CREDENTIAL_PROD_KEY = 'AKIAJT2DMZOXIT6PQB7A';
-    CONST CREDENTIAL_PROD_SEC = 'Hk++KYdwWQLlRTuy0P05zsKdn+JDqrc849CSINHy';
+    CONST CREDENTIAL_PROD_BUCKET_URL = '__SUBDOMAIN__.8select.io';
+    CONST CREDENTIAL_PROD_KEY = '__S3_PLUGIN_USER_ACCESS_KEY__';
+    CONST CREDENTIAL_PROD_SEC = '__S3_PLUGIN_USER_ACCESS_KEY_SECRET__';
 
     /**
      * @var string

@@ -4,7 +4,7 @@ S3_ACCESS_KEY_SECRET=$(aws --profile ${PROFILE} --region eu-central-1 cloudforma
 PLUGIN_NAME="CseEightselectBasic"
 
 DIST_DIR="dist"
-ZIP_NAME="${PLUGIN_NAME}_Oxid-EE-5_${VERSION}.zip"
+ZIP_NAME="${PLUGIN_NAME}_Oxid-6_${VERSION}.zip"
 DIST_PATH="${CURRENT_DIR}/../../${DIST_DIR}/${ZIP_NAME}"
 BUILD_DIR=`mktemp -d`
 PLUGIN_DIR="${BUILD_DIR}/${PLUGIN_NAME}"
@@ -24,11 +24,12 @@ rm -rf vendor
 rm -rf bin/lib
 rm -f bin/release.sh
 rm -rf dist
+rm -rf .git*
 
 sed -i '' "s@__VERSION__@${VERSION}@g" modules/asign/8select/metadata.php
 
 TPL_PATH="modules/asign/8select/application/views/blocks/base_style.tpl"
-UPLOADER_PATH="modules/asign/8select/models/eightselect_aws.php"
+UPLOADER_PATH="modules/asign/8select/Model/Aws.php"
 
 if [ ${PROFILE} == 'production' ]
 then

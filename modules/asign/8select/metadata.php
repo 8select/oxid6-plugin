@@ -20,7 +20,7 @@ $aModule = [
                  <p>Your 8select team</p>',
     ],
     'thumbnail'   => '8selectLogo.jpeg',
-    'version'     => '1.0.0',
+    'version'     => '__VERSION__',
     'author'      => 'A-SIGN GmbH',
     'url'         => 'https://www.a-sign.ch',
     'email'       => 'info@a-sign.ch',
