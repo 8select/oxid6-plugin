@@ -103,23 +103,26 @@ class AdminExportDo extends \OxidEsales\Eshop\Application\Controller\Admin\Dynam
 
             $sParentId = $oArticle->oxarticles__oxparentid->value;
 
+            $oEightSelectExport = clone $oEightSelectTmpExport;
+            $oEightSelectExport->setArticle($oArticle);
+
             // set parent article (performance loading)
             if ($oArticle->isVariant() && !isset($this->_aParent[$sParentId])) {
                 // clear parent from other variant
                 $this->_aParent = [];
-                $oParent = $oArticle->getParentArticle();
-                $this->_aParent[$sParentId]['article_parent'] = $oParent;
+                // $oParent can be false here: Check for this possibility
+                if ($oParent = $oArticle->getParentArticle()) {
+                    $this->_aParent[$sParentId]['article_parent'] = $oParent;
 
-                $oEightSelectParentExport = clone $oEightSelectTmpExport;
-                $oEightSelectParentExport->setArticle($oParent);
-                $oEightSelectParentExport->initData();
-                $this->_aParent[$sParentId]['export_parent'] = $oEightSelectParentExport;
+                    /** @var eightselect_export $oEightSelectParentExport */
+                    $oEightSelectParentExport = clone $oEightSelectTmpExport;
+                    $oEightSelectParentExport->setArticle($oParent);
+                    $oEightSelectParentExport->initData();
+                    $this->_aParent[$sParentId]['export_parent'] = $oEightSelectParentExport;
+                }
             }
 
-            $oEightSelectExport = clone $oEightSelectTmpExport;
-            $oEightSelectExport->setArticle($oArticle);
-
-            if ($oArticle->isVariant()) {
+            if ($oArticle->isVariant() && isset($this->_aParent[$sParentId])) {
                 $oEightSelectExport->setParent($this->_aParent[$oArticle->oxarticles__oxparentid->value]['article_parent']);
                 $oEightSelectExport->setParentExport($this->_aParent[$oArticle->oxarticles__oxparentid->value]['export_parent']);
             }
