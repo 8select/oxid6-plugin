@@ -1,17 +1,14 @@
 **Jira Issue**
 
-https://8select.atlassian.net/browse/
+_please paste link here_
 
 **Summary**
 
 Summarize what you have done and why you have done it the way you did.
 
-<!--
-You can assign a team-member to review the PR.
-If you are confident that no critical system breaks you can merge without a review.
--->
 **Checklist**
 
-- [ ] PR title is prefixed with Jira Issue Id - e.g. WGT-42
-- [ ] Add feature / bug label
-- [ ] Unit tests for new / changed logic exist OR no logic changes are passing
+- [ ] Code change has been peer-reviewed
+- [ ] Changed code has been fully tested
+- [ ] PR title is prefixed with Jira issue id - e.g. "EIGHT-42"
+- [ ] PR has a "feature" or "bug" label
