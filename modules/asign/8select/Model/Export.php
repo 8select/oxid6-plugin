@@ -2,26 +2,31 @@
 
 namespace ASign\EightSelect\Model;
 
+use OxidEsales\Eshop\Application\Model\Article;
+use OxidEsales\Eshop\Core\Model\BaseModel;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\Request;
+
 /**
  * Class Export
  * @package ASign\EightSelect\Model
  */
-class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
+class Export extends BaseModel
 {
     /** @var string */
-    const EIGHTSELECT_CSV_DELIMITER = ';';
+    const CSV_DELIMITER = ';';
 
     /** @var string */
-    const EIGHTSELECT_CSV_QUALIFIER = '"';
+    const CSV_QUALIFIER = '"';
 
     /** @var string */
-    const EIGHTSELECT_CSV_MULTI_DELIMITER = '|';
+    const CSV_MULTI_DELIMITER = '|';
 
     /** @var string */
-    const EIGHTSELECT_CATEGORY_DELIMITER = ' / ';
+    const CATEGORY_DELIMITER = ' / ';
 
     /** @var int */
-    public static $err_nofeedid = -99;
+    const ERR_NOFEEDID = -99;
 
     /**
      * Current class name
@@ -36,58 +41,60 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
     protected $_aCsvAttributes = null;
 
     /**
-     * @var oxArticle
+     * @var Article
      */
     protected $_oArticle = null;
 
     /**
-     * @var oxArticle
+     * @var Article
      */
     protected $_oParent = null;
 
     /**
-     * @var eightselect_export
+     * @var Export
      */
     protected $_oParentExport = null;
 
     /**
      * @var string
      */
-    static protected $_sExportLocalPath = 'export/';
+    protected $_sExportLocalPath = 'export/';
 
     /**
      * @var string
      */
-    static protected $_sExportFileName = '#FEEDID#_#FEEDTYPE#_#TIMESTAMP#.csv';
+    protected $_sExportFileName = '#FEEDID#_#FEEDTYPE#_#TIMESTAMP#.csv';
 
     /**
      * EightSelectExport constructor.
      */
     public function __construct()
     {
-        $oEightSelectAttribute = oxNew(\ASign\EightSelect\Model\Attribute::class);
+        parent::__construct();
 
-        $sType = \OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('do_full') ? 'do_full' : 'do_update';
+        $attribute = oxNew(Attribute::class);
 
-        if ($sType === 'do_full') {
-            $aCsvFields = $oEightSelectAttribute->getAllFields();
+        $type = Registry::get(Request::class)->getRequestEscapedParameter('do_full') ? 'do_full' : 'do_update';
+
+        if ($type === 'do_full') {
+            $csvFields = $attribute->getAllFields();
         } else {
-            $aCsvFields = $oEightSelectAttribute->getFieldsByType('forUpdate');
+            $csvFields = $attribute->getFieldsByType('forUpdate');
         }
 
-        $this->_aCsvAttributes = array_fill_keys(array_keys($aCsvFields), '');
+        $this->_aCsvAttributes = array_fill_keys(array_keys($csvFields), '');
     }
 
     /**
-     * @param \OxidEsales\Eshop\Application\Model\Article $oArticle
+     * @param Article $article
      */
-    public function setArticle(\OxidEsales\Eshop\Application\Model\Article &$oArticle)
+    public function setArticle(Article &$article)
     {
-        $this->_oArticle = $oArticle;
+        $this->_oArticle = $article;
     }
 
     /**
-     * @return \OxidEsales\Eshop\Application\Model\Article
+     * @return Article
      */
     public function getArticle()
     {
@@ -95,11 +102,11 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
     }
 
     /**
-     * @param \OxidEsales\Eshop\Application\Model\Article $oParent
+     * @param Article $parent
      */
-    public function setParent(\OxidEsales\Eshop\Application\Model\Article $oParent)
+    public function setParent(Article $parent)
     {
-        $this->_oParent = $oParent;
+        $this->_oParent = $parent;
     }
 
     /**
@@ -107,18 +114,18 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
      */
     public function initData()
     {
-        $oEightSelectExportStatic = oxNew(\ASign\EightSelect\Model\Export\ExportStatic::class);
-        $oEightSelectExportStatic->setAttributes($this->_aCsvAttributes);
-        $oEightSelectExportStatic->setArticle($this->_oArticle);
-        $oEightSelectExportStatic->setParent($this->_oParent);
-        $oEightSelectExportStatic->setParentExport($this->_oParentExport);
-        $oEightSelectExportStatic->run();
+        $exportStatic = oxNew(Export\ExportStatic::class);
+        $exportStatic->setAttributes($this->_aCsvAttributes);
+        $exportStatic->setArticle($this->_oArticle);
+        $exportStatic->setParent($this->_oParent);
+        $exportStatic->setParentExport($this->_oParentExport);
+        $exportStatic->run();
 
-        $oEightSelectExportDynamic = oxNew(\ASign\EightSelect\Model\Export\ExportDynamic::class);
-        $oEightSelectExportDynamic->setAttributes($this->_aCsvAttributes);
-        $oEightSelectExportDynamic->setArticle($this->_oArticle);
-        $oEightSelectExportDynamic->setParent($this->_oParent);
-        $oEightSelectExportDynamic->run();
+        $exportDynamic = oxNew(Export\ExportDynamic::class);
+        $exportDynamic->setAttributes($this->_aCsvAttributes);
+        $exportDynamic->setArticle($this->_oArticle);
+        $exportDynamic->setParent($this->_oParent);
+        $exportDynamic->run();
 
         // special handling for main articles without variants
         if (!$this->_oArticle->isVariant()) {
@@ -126,10 +133,10 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
         }
 
         // copy empty variant infos from parent export
-        if ($this->_oParentExport instanceof \ASign\EightSelect\Model\Export) {
-            foreach ($this->_aCsvAttributes as $sAttrName => $sAttrValue) {
-                if ($sAttrValue === '') {
-                    $this->_aCsvAttributes[$sAttrName] = $this->_oParentExport->getAttributeValue($sAttrName);
+        if ($this->_oParentExport instanceof Export) {
+            foreach ($this->_aCsvAttributes as $attributeName => $attributeValue) {
+                if ($attributeValue === '') {
+                    $this->_aCsvAttributes[$attributeName] = $this->_oParentExport->getAttributeValue($attributeName);
                 }
             }
         }
@@ -142,23 +149,23 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
      */
     public function getCsvHeader()
     {
-        $sType = \OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('do_full') ? 'do_full' : 'do_update';
+        $type = Registry::get(Request::class)->getRequestEscapedParameter('do_full') ? 'do_full' : 'do_update';
 
-        if ($sType === 'do_update') {
-            $aCsvHeaderFields = [];
-            $oEightSelectAttribute = oxNew(\ASign\EightSelect\Model\Attribute::class);
-            $aCsvUpdateFields = $oEightSelectAttribute->getFieldsByType('forUpdate');
+        if ($type === 'do_update') {
+            $csvHeaderFields = [];
+            $attribute = oxNew(Attribute::class);
+            $csvUpdateFields = $attribute->getFieldsByType('forUpdate');
 
-            foreach ($aCsvUpdateFields as $sKey => $aCsvField) {
-                $aCsvHeaderFields[] = $aCsvField['propertyFeedName'];
+            foreach ($csvUpdateFields as $key => $csvField) {
+                $csvHeaderFields[] = $csvField['propertyFeedName'];
             }
         } else {
-            $aCsvHeaderFields = array_keys($this->_aCsvAttributes);
+            $csvHeaderFields = array_keys($this->_aCsvAttributes);
         }
 
-        $sCsvHeader = self::EIGHTSELECT_CSV_QUALIFIER.implode(self::EIGHTSELECT_CSV_QUALIFIER . self::EIGHTSELECT_CSV_DELIMITER . self::EIGHTSELECT_CSV_QUALIFIER, $aCsvHeaderFields) . self::EIGHTSELECT_CSV_QUALIFIER;
+        $csvHeader = self::CSV_QUALIFIER . implode(self::CSV_QUALIFIER . self::CSV_DELIMITER . self::CSV_QUALIFIER, $csvHeaderFields) . self::CSV_QUALIFIER;
 
-        return $sCsvHeader . PHP_EOL;
+        return $csvHeader . PHP_EOL;
     }
 
     /**
@@ -170,111 +177,108 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
         $this->initData();
         $this->checkRequired();
 
-        $sLine = $this->_getAttributesAsString();
+        $line = $this->_getAttributesAsString();
 
-        return $sLine . PHP_EOL;
+        return $line . PHP_EOL;
     }
 
     /**
      * @return string
      */
-    private function _getAttributesAsString()
+    protected function _getAttributesAsString()
     {
-        $sDelimiter = self::EIGHTSELECT_CSV_DELIMITER;
-        $sQualifier = self::EIGHTSELECT_CSV_QUALIFIER;
+        $delimiter = self::CSV_DELIMITER;
+        $qualifier = self::CSV_QUALIFIER;
 
-        $sLine = '';
-        foreach ($this->_aCsvAttributes as $sFieldName => $sFieldValue) {
+        $line = '';
+        foreach ($this->_aCsvAttributes as $fieldName => $fieldValue) {
             // remove newlines
-            $sFieldValue = preg_replace('/\s\s+/', ' ', $sFieldValue);
+            $fieldValue = preg_replace('/\s\s+/', ' ', $fieldValue);
 
             // remove html (except "beschreibung")
-            if ($sFieldName !== 'beschreibung') {
-                $sFieldValue = strip_tags($sFieldValue);
+            if ($fieldName !== 'beschreibung') {
+                $fieldValue = strip_tags($fieldValue);
             }
 
             // Don't add slashes to ; in the value: They are already in quotes, escaping them only breaks HTML entities
 
             // add extra double quote if double quote is in there
-            $sFieldValue = str_replace('"', '""', $sFieldValue);
+            $fieldValue = str_replace('"', '""', $fieldValue);
 
             // add delimiter and qualifier
-            $sLine .= $sQualifier . $sFieldValue . $sQualifier . $sDelimiter;
+            $line .= $qualifier . $fieldValue . $qualifier . $delimiter;
         }
 
-        return rtrim($sLine, $sDelimiter);
+        return rtrim($line, $delimiter);
     }
 
     /**
-     * @param $sAttributeName
+     * @param string $attributeName
      * @return mixed|string
      */
-    public function getAttributeValue($sAttributeName)
+    public function getAttributeValue($attributeName)
     {
-        return isset($this->_aCsvAttributes[$sAttributeName]) ? $this->_aCsvAttributes[$sAttributeName] : '';
+        return isset($this->_aCsvAttributes[$attributeName]) ? $this->_aCsvAttributes[$attributeName] : '';
     }
 
     /**
-     * @param bool $blFull
+     * @param bool $full
      * @return mixed
      */
-    public function getExportFileName($blFull = false)
+    public function getExportFileName($full = false)
     {
-        $sFeedId = $this->getConfig()->getConfigParam('sEightSelectFeedId');
+        $feedId = $this->getConfig()->getConfigParam('sEightSelectFeedId');
 
-        if (!$sFeedId) {
-            throw new \UnexpectedValueException(\OxidEsales\Eshop\Core\Registry::getLang()->translateString('EIGHTSELECT_ADMIN_EXPORT_NOFEEDID'));
+        if (!$feedId) {
+            throw new \UnexpectedValueException(Registry::getLang()->translateString('EIGHTSELECT_ADMIN_EXPORT_NOFEEDID'));
         }
 
-        $aParams = [
-            '#FEEDID#'    => $sFeedId,
-            '#FEEDTYPE#'  => $blFull ? 'product_feed' : 'property_feed',
+        $params = [
+            '#FEEDID#'    => $feedId,
+            '#FEEDTYPE#'  => $full ? 'product_feed' : 'property_feed',
             '#TIMESTAMP#' => round(microtime(true) * 1000)
         ];
 
-        $sFilename = str_replace(array_keys($aParams), $aParams, self::$_sExportFileName);
-
-        return $sFilename;
+        return str_replace(array_keys($params), $params, $this->_sExportFileName);
     }
 
     /**
-     * @param $blFull
+     * @param bool $full
      * @return array|false
      */
-    private static function _getExportFiles($blFull)
+    protected function _getExportFiles($full)
     {
-        $myConfig = \OxidEsales\Eshop\Core\Registry::getConfig();
-        $sExportLocalPath = $myConfig->getConfigParam('sShopDir') . self::$_sExportLocalPath;
-        $sFeedId = \OxidEsales\Eshop\Core\Registry::getConfig()->getConfigParam('sEightSelectFeedId');
+        $config = Registry::getConfig();
+        $exportLocalPath = $config->getConfigParam('sShopDir') . $this->_sExportLocalPath;
+        $feedId = Registry::getConfig()->getConfigParam('sEightSelectFeedId');
 
-        if (!$sFeedId) {
-            throw new \UnexpectedValueException(\OxidEsales\Eshop\Core\Registry::getLang()->translateString('EIGHTSELECT_ADMIN_EXPORT_NOFEEDID'));
+        if (!$feedId) {
+            throw new \UnexpectedValueException(Registry::getLang()->translateString('EIGHTSELECT_ADMIN_EXPORT_NOFEEDID'));
         }
 
-        $aParams = [
-            '#FEEDID#'    => $myConfig->getConfigParam('sEightSelectFeedId'),
-            '#FEEDTYPE#'  => $blFull ? 'product_feed' : 'property_feed',
+        $params = [
+            '#FEEDID#'    => $config->getConfigParam('sEightSelectFeedId'),
+            '#FEEDTYPE#'  => $full ? 'product_feed' : 'property_feed',
             '#TIMESTAMP#' => '*',
         ];
 
-        $sFilename = str_replace(array_keys($aParams), $aParams, self::$_sExportFileName);
+        $fileName = str_replace(array_keys($params), $params, $this->_sExportFileName);
 
-        return glob($sExportLocalPath . $sFilename);
+        return glob($exportLocalPath . $fileName);
     }
 
     /**
      * Return the latest (newest) export feed
      *
-     * @param bool $blFull
+     * @param bool $full
      * @return string
-     * @throws UnexpectedValueException
      */
-    public static function getExportLatestFile($blFull = false)
+    public function getExportLatestFile($full = false)
     {
-        $aFiles = self::_getExportFiles($blFull);
+        $files = $this->_getExportFiles($full);
 
-        if (is_array($aFiles) && count($aFiles)) {
-            return array_pop($aFiles);
+        if (is_array($files) && count($files)) {
+            return array_pop($files);
         }
 
         return '';
@@ -283,55 +287,53 @@ class Export extends \OxidEsales\Eshop\Core\Model\BaseModel
     /**
      * Remove unused export feeds. You can set the number of keeping files in module settings
      *
-     * @param bool $blFull
-     * @throws UnexpectedValueException
+     * @param bool $full
      */
-    public static function clearExportLocalFolder($blFull = false)
+    public function clearExportLocalFolder($full = false)
     {
-        $aFiles = self::_getExportFiles($blFull);
+        $files = $this->_getExportFiles($full);
 
-        if (is_array($aFiles) && count($aFiles)) {
-            $iKeepFiles = \OxidEsales\Eshop\Core\Registry::getConfig()->getConfigParam('sEightSelectExportNrOfFeeds');
-            $aFiles = array_reverse($aFiles);
+        if (is_array($files) && count($files)) {
+            $keepFiles = Registry::getConfig()->getConfigParam('sEightSelectExportNrOfFeeds');
+            $files = array_reverse($files);
 
             $i = 0;
 
-            foreach ($aFiles as $sFile) {
-                if ($iKeepFiles > $i++) {
+            foreach ($files as $file) {
+                if ($keepFiles > $i++) {
                     continue;
                 }
 
-                unlink($sFile);
+                unlink($file);
             }
         }
     }
 
     /**
-     * @param EightSelectExport $oParentExport
+     * @param Export $parentExport
      */
-    public function setParentExport($oParentExport)
+    public function setParentExport($parentExport)
     {
-        $this->_oParentExport = $oParentExport;
+        $this->_oParentExport = $parentExport;
     }
 
     /**
      * Check if all required fields are not empty
      *
      * @return bool
-     * @throws oxSystemComponentException
      */
     public function checkRequired()
     {
-        static $aRequiredFields = null;
-        if ($aRequiredFields === null) {
-            $aRequiredFields = [];
+        static $requiredFields = null;
+        if ($requiredFields === null) {
+            $requiredFields = [];
 
-            $oEightSelectAttribute = oxNew(\ASign\EightSelect\Model\Attribute::class);
-            $aRequiredFields = array_keys($oEightSelectAttribute->getFieldsByType('required'));
+            $attribute = oxNew(Attribute::class);
+            $requiredFields = array_keys($attribute->getFieldsByType('required'));
         }
 
-        foreach ($aRequiredFields as $sRequiredField ) {
-            if (empty($this->_aCsvAttributes[$sRequiredField])) {
+        foreach ($requiredFields as $requiredField) {
+            if (empty($this->_aCsvAttributes[$requiredField])) {
                 return false;
             }
         }

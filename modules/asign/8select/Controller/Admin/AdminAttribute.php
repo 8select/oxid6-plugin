@@ -2,11 +2,13 @@
 
 namespace ASign\EightSelect\Controller\Admin;
 
+use OxidEsales\Eshop\Application\Controller\Admin\AdminDetailsController;
+
 /**
  * Class AdminAttribute
  * @package ASign\EightSelect\Controller\Admin
  */
-class AdminAttribute extends \OxidEsales\Eshop\Application\Controller\Admin\AdminDetailsController
+class AdminAttribute extends AdminDetailsController
 {
     /**
      * Export class name

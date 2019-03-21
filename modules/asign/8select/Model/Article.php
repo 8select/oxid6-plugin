@@ -2,6 +2,10 @@
 
 namespace ASign\EightSelect\Model;
 
+use OxidEsales\Eshop\Application\Controller\ArticleDetailsController;
+use OxidEsales\Eshop\Application\Model\SelectList;
+use OxidEsales\EshopCommunity\Application\Model\Selection;
+
 /**
  * Class Article
  * @package ASign\EightSelect\Model
@@ -9,10 +13,10 @@ namespace ASign\EightSelect\Model;
 class Article extends Article_parent
 {
     /** @var array */
-    private $_aEightSelectColorLabels = null;
+    protected $_colorLabels = null;
 
     /** @var string */
-    private $_sVirtualMasterSku = null;
+    protected $_virtualMasterSku = null;
 
     /**
      * Get EightSelect virtual sku
@@ -23,34 +27,36 @@ class Article extends Article_parent
      */
     public function getEightSelectVirtualSku()
     {
-        if ($this->_sVirtualMasterSku !== null) {
-            return $this->_sVirtualMasterSku;
+        if ($this->_virtualMasterSku !== null) {
+            return $this->_virtualMasterSku;
         }
 
-        $this->_sVirtualMasterSku = $this->oxarticles__oxartnum->value;
+        $this->_virtualMasterSku = $this->getFieldData('oxartnum');
 
-        $oView = $this->getConfig()->getTopActiveView();
-        if ($oView instanceof \OxidEsales\Eshop\Application\Controller\ArticleDetailsController) {
-            $aVarSelections = $oView->getVariantSelections();
+        $view = $this->getConfig()->getTopActiveView();
+        if ($view instanceof ArticleDetailsController) {
+            $varSelections = $view->getVariantSelections();
 
-            if ($aVarSelections && $aVarSelections['blPerfectFit'] && $aVarSelections['oActiveVariant']) {
-                $oVariant = $aVarSelections['oActiveVariant'];
-                $this->_sVirtualMasterSku = $oVariant->oxarticles__oxartnum->value;
-            } elseif (isset($aVarSelections['selections']) && count($aVarSelections['selections'])) {
-                $aEightSelectColorLabels = $this->getEightSelectColorLabels();
+            if ($varSelections && $varSelections['blPerfectFit'] && $varSelections['oActiveVariant']) {
+                $variant = $varSelections['oActiveVariant'];
+                $this->_virtualMasterSku = $variant->oxarticles__oxartnum->value;
+            } elseif (isset($varSelections['selections']) && count($varSelections['selections'])) {
+                $colorLabels = $this->getEightSelectColorLabels();
 
-                foreach ($aVarSelections['selections'] as $oVarSelectList) {
-                    if (in_array($oVarSelectList->getLabel(), $aEightSelectColorLabels) && $oVarSelectList->getActiveSelection()) {
-                        $oSelection = $oVarSelectList->getActiveSelection();
-                        $sFieldValue = strtolower($oSelection->getName());
-                        $this->_sVirtualMasterSku .= '-' . str_replace(' ', '', $sFieldValue);
+                /** @var SelectList $varSelectList */
+                foreach ($varSelections['selections'] as $varSelectList) {
+                    if (in_array($varSelectList->getLabel(), $colorLabels) && $varSelectList->getActiveSelection()) {
+                        /** @var Selection $selection */
+                        $selection = $varSelectList->getActiveSelection();
+                        $fieldValue = strtolower($selection->getName());
+                        $this->_virtualMasterSku .= '-' . str_replace(' ', '', $fieldValue);
                         break;
                     }
                 }
             }
         }
 
-        return $this->_sVirtualMasterSku;
+        return $this->_virtualMasterSku;
     }
 
     /**
@@ -60,13 +66,13 @@ class Article extends Article_parent
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
-    private function getEightSelectColorLabels()
+    protected function getEightSelectColorLabels()
     {
-        if ($this->_aEightSelectColorLabels === null) {
-            $sSql = "SELECT OXOBJECT FROM eightselect_attribute2oxid WHERE ESATTRIBUTE = 'farbe'";
-            $this->_aEightSelectColorLabels = (array) \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getCol($sSql);
+        if ($this->_colorLabels === null) {
+            $query = "SELECT OXOBJECT FROM eightselect_attribute2oxid WHERE ESATTRIBUTE = 'farbe'";
+            $this->_colorLabels = (array) \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getCol($query);
         }
 
-        return $this->_aEightSelectColorLabels;
+        return $this->_colorLabels;
     }
 }

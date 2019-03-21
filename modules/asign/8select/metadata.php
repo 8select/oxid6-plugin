@@ -25,33 +25,18 @@ $aModule = [
     'url'         => 'https://www.a-sign.ch',
     'email'       => 'info@a-sign.ch',
     'extend'      => [
-        \OxidEsales\Eshop\Core\ViewConfig::class  => ASign\EightSelect\Core\ViewConfig::class,
-        \OxidEsales\Eshop\Application\Model\Article::class => ASign\EightSelect\Model\Article::class,
-        \OxidEsales\Eshop\Application\Component\BasketComponent::class => ASign\EightSelect\Component\BasketComponent::class,
+        \OxidEsales\Eshop\Core\ViewConfig::class                         => ASign\EightSelect\Core\ViewConfig::class,
+        \OxidEsales\Eshop\Application\Model\Article::class               => ASign\EightSelect\Model\Article::class,
+        \OxidEsales\Eshop\Application\Component\BasketComponent::class   => ASign\EightSelect\Component\BasketComponent::class,
         \OxidEsales\Eshop\Application\Component\Widget\MiniBasket::class => ASign\EightSelect\Component\MiniBasket::class
     ],
-    'controllers'  => [
+    'controllers' => [
         'AdminAttribute'     => ASign\EightSelect\Controller\Admin\AdminAttribute::class,
         'AdminAttributeMain' => ASign\EightSelect\Controller\Admin\AdminAttributeMain::class,
         'AdminExport'        => ASign\EightSelect\Controller\Admin\AdminExport::class,
         'AdminExportDo'      => ASign\EightSelect\Controller\Admin\AdminExportDo::class,
         'AdminExportMain'    => ASign\EightSelect\Controller\Admin\AdminExportMain::class,
         'AdminExportUpload'  => ASign\EightSelect\Controller\Admin\AdminExportUpload::class
-    ],
-    'files'       => [
-        // Core
-        'Dispatcher' => ASign\EightSelect\Core\Dispatcher::class,
-        'Request'    => ASign\EightSelect\Core\Request::class,
-
-        // Models
-        'Attribute'      => ASign\EightSelect\Model\Attribute::class,
-        'Attribute2Oxid' => ASign\EightSelect\Model\Attribute2Oxid::class,
-        'Aws'            => ASign\EightSelect\Model\Aws::class,
-        'Export'         => ASign\EightSelect\Model\Export::class,
-        'Log'            => ASign\EightSelect\Model\SelectLog::class,
-        'ExportAbstract' => ASign\EightSelect\Model\Export\ExportAbstract::class,
-        'ExportDynamic'  => ASign\EightSelect\Model\Export\ExportDynamic::class,
-        'ExportStatic'   => ASign\EightSelect\Model\Export\ExportStatic::class,
     ],
     'events'      => [
         'onActivate'   => 'ASign\EightSelect\Core\Events::onActivate',

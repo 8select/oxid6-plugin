@@ -2,11 +2,19 @@
 
 namespace ASign\EightSelect\Controller\Admin;
 
+use ASign\EightSelect\Model\Attribute;
+use ASign\EightSelect\Model\Attribute2Oxid;
+use OxidEsales\Eshop\Application\Controller\Admin\AdminDetailsController;
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Model\ListModel;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\Request;
+
 /**
  * Class AdminAttributeMain
  * @package ASign\EightSelect\Controller\Admin
  */
-class AdminAttributeMain extends \OxidEsales\Eshop\Application\Controller\Admin\AdminDetailsController
+class AdminAttributeMain extends AdminDetailsController
 {
     /**
      * Export ui class name
@@ -27,7 +35,7 @@ class AdminAttributeMain extends \OxidEsales\Eshop\Application\Controller\Admin\
      *
      * @var array
      */
-    protected $_aAttrEightselect2Oxid = [];
+    protected $_attribute2Oxid = [];
 
     /**
      * Calls parent::render, sets template data
@@ -36,14 +44,14 @@ class AdminAttributeMain extends \OxidEsales\Eshop\Application\Controller\Admin\
      */
     public function render()
     {
-        $sReturn = parent::render();
+        $template = parent::render();
 
         $this->_aViewData['aAttributesEightselect'] = $this->_getAttributesFromEightselect();
         $this->_aViewData['aAttributesOxid'] = $this->_getAttributesFromOxid();
 
-        $this->_aAttrEightselect2Oxid = $this->_getEightselect2Oxid();
+        $this->_attribute2Oxid = $this->_getEightselect2Oxid();
 
-        return $sReturn;
+        return $template;
     }
 
     /**
@@ -51,53 +59,53 @@ class AdminAttributeMain extends \OxidEsales\Eshop\Application\Controller\Admin\
      *
      * @return array $aSelectAttributes
      */
-    private function _getAttributesFromOxid()
+    protected function _getAttributesFromOxid()
     {
-        $aSelectAttributes = [];
-        $oLang = \OxidEsales\Eshop\Core\Registry::getLang();
+        $selectAttributes = [];
+        $lang = Registry::getLang();
 
         // Default static Oxid fields
-        $aArticleFields = [
-            ['oxarticlesfield;OXARTNUM', $oLang->translateString('ARTICLE_MAIN_ARTNUM')],
-            ['oxarticlesfield;OXTITLE', $oLang->translateString('ARTICLE_MAIN_TITLE')],
-            ['oxarticlesfield;OXSHORTDESC', $oLang->translateString('GENERAL_ARTICLE_OXSHORTDESC')],
-            ['oxartextendsfield;OXLONGDESC', $oLang->translateString('GENERAL_ARTICLE_OXLONGDESC')],
-            ['oxarticlesfield;OXEAN', $oLang->translateString('ARTICLE_MAIN_EAN')],
-            ['oxarticlesfield;OXWIDTH', $oLang->translateString('GENERAL_ARTICLE_OXWIDTH')],
-            ['oxarticlesfield;OXHEIGHT', $oLang->translateString('GENERAL_ARTICLE_OXHEIGHT')],
-            ['oxarticlesfield;OXHLENGTH', $oLang->translateString('GENERAL_ARTICLE_OXLENGTH')],
+        $articleFields = [
+            ['oxarticlesfield;OXARTNUM', $lang->translateString('ARTICLE_MAIN_ARTNUM')],
+            ['oxarticlesfield;OXTITLE', $lang->translateString('ARTICLE_MAIN_TITLE')],
+            ['oxarticlesfield;OXSHORTDESC', $lang->translateString('GENERAL_ARTICLE_OXSHORTDESC')],
+            ['oxartextendsfield;OXLONGDESC', $lang->translateString('GENERAL_ARTICLE_OXLONGDESC')],
+            ['oxarticlesfield;OXEAN', $lang->translateString('ARTICLE_MAIN_EAN')],
+            ['oxarticlesfield;OXWIDTH', $lang->translateString('GENERAL_ARTICLE_OXWIDTH')],
+            ['oxarticlesfield;OXHEIGHT', $lang->translateString('GENERAL_ARTICLE_OXHEIGHT')],
+            ['oxarticlesfield;OXHLENGTH', $lang->translateString('GENERAL_ARTICLE_OXLENGTH')],
         ];
 
-        $sOptGroupAttribute = \OxidEsales\Eshop\Core\Registry::getLang()->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ARTICLE');
+        $optGroupAttribute = Registry::getLang()->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ARTICLE');
 
-        foreach ($aArticleFields as $aArticleField) {
-            $aSelectAttributes[$sOptGroupAttribute][$aArticleField[0]] = $aArticleField[1];
+        foreach ($articleFields as $articleField) {
+            $selectAttributes[$optGroupAttribute][$articleField[0]] = $articleField[1];
         }
 
         // Dynamic attributes
-        $sTableName = getViewName('oxattribute');
-        $aAttributes = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(\OxidEsales\Eshop\Core\DatabaseProvider::FETCH_MODE_NUM)->getAll("SELECT CONCAT('oxattributeid;', OXID), OXTITLE FROM {$sTableName}");
-        $sOptGroupAttribute = $oLang->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ATTRIBUTE');
+        $tableName = getViewName('oxattribute');
+        $attributes = DatabaseProvider::getDb(DatabaseProvider::FETCH_MODE_NUM)->getAll("SELECT CONCAT('oxattributeid;', OXID), OXTITLE FROM {$tableName}");
+        $optGroupAttribute = $lang->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ATTRIBUTE');
 
-        foreach ($aAttributes as $aAttribute) {
-            $aSelectAttributes[$sOptGroupAttribute][$aAttribute[0]] = $aAttribute[1];
+        foreach ($attributes as $attribute) {
+            $selectAttributes[$optGroupAttribute][$attribute[0]] = $attribute[1];
         }
 
         // Dynamic variant selections
-        $sTableName = getViewName('oxarticles');
-        $aVarSelect = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(\OxidEsales\Eshop\Core\DatabaseProvider::FETCH_MODE_NUM)->getCol("SELECT DISTINCT OXVARNAME FROM {$sTableName} WHERE OXVARNAME != ''");
-        $sOptGroupVarSelect = $oLang->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_VARSELECT');
+        $tableName = getViewName('oxarticles');
+        $varSelects = DatabaseProvider::getDb(DatabaseProvider::FETCH_MODE_NUM)->getCol("SELECT DISTINCT OXVARNAME FROM {$tableName} WHERE OXVARNAME != ''");
+        $optGroupVarSelect = $lang->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_VARSELECT');
 
-        foreach ($aVarSelect as $sVarSelect) {
-            $aDiffVarSelect = explode(' | ', $sVarSelect);
+        foreach ($varSelects as $varSelect) {
+            $diffVarSelects = explode(' | ', $varSelect);
 
-            foreach ($aDiffVarSelect as $sDiffVarSelect) {
-                $sDiffVarSelect = trim($sDiffVarSelect);
-                $aSelectAttributes[$sOptGroupVarSelect]['oxvarselect;' . $sDiffVarSelect] = $sDiffVarSelect;
+            foreach ($diffVarSelects as $diffVarSelect) {
+                $diffVarSelect = trim($diffVarSelect);
+                $selectAttributes[$optGroupVarSelect]['oxvarselect;' . $diffVarSelect] = $diffVarSelect;
             }
         }
 
-        return $aSelectAttributes;
+        return $selectAttributes;
     }
 
     /**
@@ -105,57 +113,56 @@ class AdminAttributeMain extends \OxidEsales\Eshop\Application\Controller\Admin\
      *
      * @return mixed
      */
-    private function _getAttributesFromEightselect()
+    protected function _getAttributesFromEightselect()
     {
-        /** @var eightselect_attribute $oAttribute */
-        $oAttribute = oxNew(\ASign\EightSelect\Model\Attribute::class);
+        /** @var Attribute $attribute */
+        $attribute = oxNew(Attribute::class);
 
-        return $oAttribute->getFieldsByType('configurable', true);
+        return $attribute->getFieldsByType('configurable', true);
     }
 
     /**
      * Return associated 8select to oxid attributes
      *
      * @return array $aAttributes2Oxid
-     * @throws oxSystemComponentException
      */
-    private function _getEightselect2Oxid()
+    protected function _getEightselect2Oxid()
     {
-        $aAttributes2Oxid = [];
+        $attributes2Oxid = [];
 
-        $oAttr2OxidList = oxNew(\OxidEsales\Eshop\Core\Model\ListModel::class);
-        $oAttr2OxidList->init(\ASign\EightSelect\Model\Attribute2Oxid::class);
+        $attr2OxidList = oxNew(ListModel::class);
+        $attr2OxidList->init(Attribute2Oxid::class);
 
-        foreach ($oAttr2OxidList->getList() as $oAttr2Oxid) {
-            $aAttributes2Oxid[$oAttr2Oxid->eightselect_attribute2oxid__esattribute->value][] = $oAttr2Oxid->eightselect_attribute2oxid__oxtype->value . ';' . $oAttr2Oxid->eightselect_attribute2oxid__oxobject->value;
+        foreach ($attr2OxidList->getList() as $attr2Oxid) {
+            $attributes2Oxid[$attr2Oxid->eightselect_attribute2oxid__esattribute->value][] = $attr2Oxid->eightselect_attribute2oxid__oxtype->value . ';' . $attr2Oxid->eightselect_attribute2oxid__oxobject->value;
         }
 
-        return $aAttributes2Oxid;
+        return $attributes2Oxid;
     }
 
     /**
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * save
+     *
+     * @throws \Exception
      */
     public function save()
     {
         parent::save();
 
-        $oTmpAttribute2Oxid = oxNew(\ASign\EightSelect\Model\Attribute2Oxid::class);
-        $oTmpAttribute2Oxid->init();
+        $tmpAttribute2Oxid = oxNew(Attribute2Oxid::class);
+        $tmpAttribute2Oxid->init();
 
-        $oConfig = $this->getConfig();
-        $aAttributes = $oConfig->getRequestParameter('oxid2eightselect');
+        $attributes = Registry::get(Request::class)->getRequestEscapedParameter('oxid2eightselect');
 
-        foreach ($aAttributes as $s8selectAttributeName => $aOxidAttribute) {
-            $oTmpAttribute2Oxid->deleteAttributes2Oxid($s8selectAttributeName);
+        foreach ($attributes as $selectAttributeName => $oxidAttributes) {
+            $tmpAttribute2Oxid->deleteAttributes2Oxid($selectAttributeName);
 
-            foreach ($aOxidAttribute as $sOxidAttribute) {
-                $oAttribute2Oxid = clone $oTmpAttribute2Oxid;
+            foreach ($oxidAttributes as $oxidAttribute) {
+                $attribute2Oxid = clone $tmpAttribute2Oxid;
 
-                if ($sOxidAttribute !== '-') {
-                    $oAttribute2Oxid->setAttributeData($s8selectAttributeName, $sOxidAttribute);
-                    $oAttribute2Oxid->save();
+                if ($oxidAttribute !== '-') {
+                    $attribute2Oxid->setAttributeData($selectAttributeName, $oxidAttribute);
+                    $attribute2Oxid->save();
                 }
             }
         }
@@ -164,13 +171,13 @@ class AdminAttributeMain extends \OxidEsales\Eshop\Application\Controller\Admin\
     /**
      * Check if attribute is set
      *
-     * @param string $sEightselectAttr
-     * @param string $sObject
+     * @param string $eightselectAttr
+     * @param string $object
      * @return bool
      */
-    public function isAttributeSelected($sEightselectAttr, $sObject)
+    public function isAttributeSelected($eightselectAttr, $object)
     {
-        if (isset($this->_aAttrEightselect2Oxid[$sEightselectAttr]) && in_array($sObject, $this->_aAttrEightselect2Oxid[$sEightselectAttr])) {
+        if (isset($this->_attribute2Oxid[$eightselectAttr]) && in_array($object, $this->_attribute2Oxid[$eightselectAttr])) {
             return true;
         }
 

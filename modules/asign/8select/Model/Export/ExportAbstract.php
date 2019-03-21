@@ -2,11 +2,17 @@
 
 namespace ASign\EightSelect\Model\Export;
 
+use ASign\EightSelect\Model\Attribute2Oxid;
+use ASign\EightSelect\Model\Export;
+use OxidEsales\Eshop\Application\Model\Article;
+use OxidEsales\Eshop\Core\Model\BaseModel;
+use OxidEsales\Eshop\Core\Model\ListModel;
+
 /**
  * Class ExportAbstract
  * @package ASign\EightSelect\Model\Export
  */
-abstract class ExportAbstract extends \OxidEsales\Eshop\Core\Model\BaseModel
+abstract class ExportAbstract extends BaseModel
 {
     /**
      * Current class name
@@ -16,17 +22,17 @@ abstract class ExportAbstract extends \OxidEsales\Eshop\Core\Model\BaseModel
     protected $_sClassName = 'ExportAbstract';
 
     /**
-     * @var oxArticle
+     * @var Article
      */
     protected $_oArticle = null;
 
     /**
-     * @var oxArticle
+     * @var Article
      */
     protected $_oParent = null;
 
     /**
-     * @var export
+     * @var Export
      */
     protected $_oParentExport = null;
 
@@ -36,35 +42,35 @@ abstract class ExportAbstract extends \OxidEsales\Eshop\Core\Model\BaseModel
     protected $_aCsvAttributes = [];
 
     /**
-     * @param array $aCsvAttributes
+     * @param array $csvAttributes
      */
-    public function setAttributes(array &$aCsvAttributes)
+    public function setAttributes(array &$csvAttributes)
     {
-        $this->_aCsvAttributes = &$aCsvAttributes;
+        $this->_aCsvAttributes = &$csvAttributes;
     }
 
     /**
-     * @param \OxidEsales\Eshop\Application\Model\Article $oArticle
+     * @param Article $article
      */
-    public function setArticle(\OxidEsales\Eshop\Application\Model\Article &$oArticle)
+    public function setArticle(Article &$article)
     {
-        $this->_oArticle = $oArticle;
+        $this->_oArticle = $article;
     }
 
     /**
-     * @param oxArticle|null $oParent
+     * @param Article $parent
      */
-    public function setParent(&$oParent)
+    public function setParent(&$parent)
     {
-        $this->_oParent = $oParent;
+        $this->_oParent = $parent;
     }
 
     /**
-     * @param eightselect_export|null $oParentExport
+     * @param Export $parentExport
      */
-    public function setParentExport(&$oParentExport)
+    public function setParentExport(&$parentExport)
     {
-        $this->_oParentExport = $oParentExport;
+        $this->_oParentExport = $parentExport;
     }
 
     /**
@@ -73,34 +79,34 @@ abstract class ExportAbstract extends \OxidEsales\Eshop\Core\Model\BaseModel
     abstract public function run();
 
     /**
-     * @param string $sAttributeName
+     * @param string $attributeName
      * @return string
      */
-    public function getVariantSelection($sAttributeName)
+    public function getVariantSelection($attributeName)
     {
         if ($this->_oParent === null) {
             return '';
         }
 
-        $sTable = getViewName('eightselect_attribute2oxid');
+        $table = getViewName('eightselect_attribute2oxid');
 
-        $oList = oxNew(\OxidEsales\Eshop\Core\Model\ListModel::class);
+        $list = oxNew(ListModel::class);
+        $list->init(Attribute2Oxid::class);
+        $list->selectString("SELECT OXOBJECT FROM {$table} WHERE ESATTRIBUTE = '{$attributeName}'");
 
-        $oList->init(\ASign\EightSelect\Model\Attribute2Oxid::class);
-        $oList->selectString("SELECT OXOBJECT FROM {$sTable} WHERE ESATTRIBUTE = '{$sAttributeName}'");
+        /** @var Attribute2Oxid $attr2Oxid */
+        foreach ($list->getArray() as $attr2Oxid) {
+            $selection = $attr2Oxid->getFieldData('oxobject');
 
-        foreach ($oList->getArray() as $oAttr2Oxid) {
-            $sSelection = $oAttr2Oxid->eightselect_attribute2oxid__oxobject->value;
+            if (strpos($this->_oParent->getFieldData('oxvarname'), $selection) !== false) {
+                $selectionNames = explode(' | ', $this->_oParent->getFieldData('oxvarname'));
+                $selectionNames = array_map('trim', $selectionNames);
+                $selectionValues = explode(' | ', $this->_oArticle->getFieldData('oxvarselect'));
+                $selectionValues = array_map('trim', $selectionValues);
 
-            if (strpos($this->_oParent->oxarticles__oxvarname->value, $sSelection) !== false) {
-                $aSelectionNames = explode(' | ', $this->_oParent->oxarticles__oxvarname->value);
-                $aSelectionNames = array_map('trim', $aSelectionNames);
-                $aSelectionValues = explode(' | ', $this->_oArticle->oxarticles__oxvarselect->value);
-                $aSelectionValues = array_map('trim', $aSelectionValues);
-                $iSizePos = array_search($sSelection, $aSelectionNames);
-
-                if ($iSizePos !== false && isset($aSelectionValues[$iSizePos])) {
-                    return $aSelectionValues[$iSizePos];
+                $sizePos = array_search($selection, $selectionNames);
+                if ($sizePos !== false && isset($selectionValues[$sizePos])) {
+                    return $selectionValues[$sizePos];
                 }
             }
         }

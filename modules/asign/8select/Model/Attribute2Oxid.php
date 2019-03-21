@@ -2,14 +2,14 @@
 
 namespace ASign\EightSelect\Model;
 
-use OxidEsales\Eshop\Core\Field;
 use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Model\BaseModel;
 
 /**
  * Class Attribute2Oxid
  * @package ASign\EightSelect\Model
  */
-class Attribute2Oxid extends \OxidEsales\Eshop\Core\Model\BaseModel
+class Attribute2Oxid extends BaseModel
 {
     /**
      * Current class name
@@ -28,37 +28,36 @@ class Attribute2Oxid extends \OxidEsales\Eshop\Core\Model\BaseModel
     /**
      * Delete attributes to oxid.
      *
-     * @param $s8selectAttributeName
+     * @param string $attributeName
      * @return bool
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
-    public function deleteAttributes2Oxid($s8selectAttributeName)
+    public function deleteAttributes2Oxid($attributeName)
     {
-        $oDB = DatabaseProvider::getDb(DatabaseProvider::FETCH_MODE_ASSOC);
-        $sCoreTable = $this->getCoreTableName();
+        $db = DatabaseProvider::getDb();
+        $coreTable = $this->getCoreTableName();
 
-        $sDelete = "DELETE FROM {$sCoreTable} WHERE OXSHOPID = ? AND ESATTRIBUTE = ?";
+        $delete = "DELETE FROM {$coreTable} WHERE OXSHOPID = ? AND ESATTRIBUTE = ?";
 
-        return (bool) $oDB->execute($sDelete, [$this->getShopId(), $s8selectAttributeName]);
+        return (bool) $db->execute($delete, [$this->getShopId(), $attributeName]);
     }
 
     /**
-     * @param string $s8selectAttributeName
-     * @param string $sOxidAttribute
+     * @param string $attributeName
+     * @param string $oxidAttribute
      */
-    public function setAttributeData($s8selectAttributeName, $sOxidAttribute)
+    public function setAttributeData($attributeName, $oxidAttribute)
     {
-        $aOxidParams = explode(';', $sOxidAttribute);
+        $oxidParams = explode(';', $oxidAttribute);
 
-        if (count($aOxidParams) === 2) {
-            $sType = $aOxidParams[0];
-            $sObject = $aOxidParams[1];
-
-            $this->eightselect_attribute2oxid__oxtype = new Field($sType);
-            $this->eightselect_attribute2oxid__oxobject = new Field($sObject);
+        if (count($oxidParams) === 2) {
+            $this->assign([
+                'oxtype'   => $oxidParams[0],
+                'oxobject' => $oxidParams[1],
+            ]);
         }
 
-        $this->eightselect_attribute2oxid__esattribute = new Field($s8selectAttributeName);
+        $this->assign(['esattribute' => $attributeName]);
     }
 }

@@ -2,7 +2,11 @@
 
 namespace ASign\EightSelect\Model\Export;
 
-use ASign\EightSelect\Model\Export\ExportDynamic;
+use ASign\EightSelect\Model\Export;
+use OxidEsales\Eshop\Application\Model\Article;
+use OxidEsales\Eshop\Application\Model\Category;
+use OxidEsales\Eshop\Application\Model\Manufacturer;
+use OxidEsales\Eshop\Core\Price;
 
 /**
  * Class ExportStatic
@@ -18,7 +22,7 @@ class ExportStatic extends ExportAbstract
     protected $_sClassName = 'EightSelectExportStatic';
 
     /** @var string */
-    protected $_sVirtualMasterSku = null;
+    protected $_virtualMasterSku = null;
 
     /**
      * Set static fields (not configurable ones)
@@ -26,48 +30,48 @@ class ExportStatic extends ExportAbstract
     public function run()
     {
         if ($this->_oParent) {
-            $sModel = $this->_oParent->oxarticles__oxartnum->value;
+            $model = $this->_oParent->getFieldData('oxartnum');
         } else {
-            $sModel = $this->_oArticle->oxarticles__oxartnum->value;
+            $model = $this->_oArticle->getFieldData('oxartnum');
         }
 
-        if ($this->_oArticle->oxarticles__oxtitle->value) {
-            $sTitle = $this->_oArticle->oxarticles__oxtitle->rawValue;
+        if ($this->_oArticle->getFieldData('oxtitle')) {
+            $title = $this->_oArticle->oxarticles__oxtitle->rawValue;
         } elseif ($this->_oParent) {
-            $sTitle = $this->_oParent->oxarticles__oxtitle->rawValue;
+            $title = $this->_oParent->oxarticles__oxtitle->rawValue;
         } else {
-            $sTitle = '';
+            $title = '';
         }
 
         !isset($this->_aCsvAttributes['mastersku']) ? null : $this->_aCsvAttributes['mastersku'] = $this->_getVirtualMasterSku();
-        !isset($this->_aCsvAttributes['model']) ? null : $this->_aCsvAttributes['model'] = $sModel;
+        !isset($this->_aCsvAttributes['model']) ? null : $this->_aCsvAttributes['model'] = $model;
         !isset($this->_aCsvAttributes['status']) ? null : $this->_aCsvAttributes['status'] = $this->getArticleStatus($this->_oArticle);
-        !isset($this->_aCsvAttributes['name1']) ? null : $this->_aCsvAttributes['name1'] = html_entity_decode($sTitle, ENT_QUOTES|ENT_HTML401);
+        !isset($this->_aCsvAttributes['name1']) ? null : $this->_aCsvAttributes['name1'] = html_entity_decode($title, ENT_QUOTES | ENT_HTML401);
         !isset($this->_aCsvAttributes['produkt_url']) ? null : $this->_aCsvAttributes['produkt_url'] = $this->_oArticle->getLink();
         !isset($this->_aCsvAttributes['bilder']) ? null : $this->_aCsvAttributes['bilder'] = $this->_getPictures();
 
-        /** @var oxManufacturer $oManufacturer */
-        $oManufacturer = $this->_oArticle->getManufacturer();
+        /** @var Manufacturer $manufacturer */
+        $manufacturer = $this->_oArticle->getManufacturer();
 
-        if ($oManufacturer) {
-            !isset($this->_aCsvAttributes['marke']) ? null : $this->_aCsvAttributes['marke'] = $oManufacturer->oxmanufacturers__oxtitle->rawValue;
+        if ($manufacturer) {
+            !isset($this->_aCsvAttributes['marke']) ? null : $this->_aCsvAttributes['marke'] = $manufacturer->oxmanufacturers__oxtitle->rawValue;
         }
 
         if (isset($this->_aCsvAttributes['angebots_preis'])) {
-            /** @var oxPrice $oPrice */
-            $oPrice = $this->_oArticle->getPrice();
+            /** @var Price $price */
+            $price = $this->_oArticle->getPrice();
 
-            if ($oPrice) {
-                $this->_aCsvAttributes['angebots_preis'] = $oPrice->getPrice();
+            if ($price) {
+                $this->_aCsvAttributes['angebots_preis'] = $price->getPrice();
             }
         }
 
         if (isset($this->_aCsvAttributes['streich_preis'])) {
-            /** @var oxPrice $oTPrice */
-            $oTPrice = $this->_oArticle->getTPrice();
+            /** @var Price $tPrice */
+            $tPrice = $this->_oArticle->getTPrice();
 
-            if ($oTPrice) {
-                $fPrice = $oTPrice->getPrice();
+            if ($tPrice) {
+                $fPrice = $tPrice->getPrice();
             } else {
                 $fPrice = $this->_aCsvAttributes['angebots_preis'];
             }
@@ -78,50 +82,52 @@ class ExportStatic extends ExportAbstract
         $this->_setCategories();
     }
 
-    private function _getPictures()
+    /**
+     * @return string
+     */
+    protected function _getPictures()
     {
-        $aPictureUrls = [];
-        $iPicCount = $this->getConfig()->getConfigParam('iPicCount');
+        $pictureUrls = [];
+        $picCount = $this->getConfig()->getConfigParam('iPicCount');
 
-        for ($i = 1; $i <= $iPicCount; $i++) {
-            $sPicUrl = $this->_oArticle->getPictureUrl($i);
+        for ($i = 1; $i <= $picCount; $i++) {
+            $picUrl = $this->_oArticle->getPictureUrl($i);
 
-            if (strpos($sPicUrl, 'nopic.jpg') === false) {
-                $aPictureUrls[] = $sPicUrl;
+            if (strpos($picUrl, 'nopic.jpg') === false) {
+                $pictureUrls[] = $picUrl;
             }
         }
 
-        return implode(\ASign\EightSelect\Model\Export::EIGHTSELECT_CSV_MULTI_DELIMITER, $aPictureUrls);
+        return implode(Export::CSV_MULTI_DELIMITER, $pictureUrls);
     }
 
     /**
      * @return string
-     * @throws oxSystemComponentException
      */
-    private function _getVirtualMasterSku()
+    protected function _getVirtualMasterSku()
     {
         if (!$this->_oParent) {
-            return $this->_oArticle->oxarticles__oxartnum->value;
+            return $this->_oArticle->getFieldData('oxartnum');
         }
 
-        if ($this->_sVirtualMasterSku !== null) {
-            return $this->_sVirtualMasterSku;
+        if ($this->_virtualMasterSku !== null) {
+            return $this->_virtualMasterSku;
         }
 
-        $this->_sVirtualMasterSku = '';
+        $this->_virtualMasterSku = '';
 
-        /** @var EightSelectExportDynamic $oEighSelectExportDynamic */
-        $oEighSelectExportDynamic = oxNew(ExportDynamic::class);
-        $oEighSelectExportDynamic->setArticle($this->_oArticle);
-        $oEighSelectExportDynamic->setParent($this->_oParent);
-        $sFieldValue = strtolower($oEighSelectExportDynamic->getVariantSelection('farbe'));
+        /** @var ExportDynamic $exportDynamic */
+        $exportDynamic = oxNew(ExportDynamic::class);
+        $exportDynamic->setArticle($this->_oArticle);
+        $exportDynamic->setParent($this->_oParent);
+        $fieldValue = strtolower($exportDynamic->getVariantSelection('farbe'));
 
-        if ($sFieldValue) {
-            $sVirtualMasterSku = $this->_oParent->oxarticles__oxartnum->value . '-' . str_replace(' ', '', $sFieldValue);
-            $this->_sVirtualMasterSku = $sVirtualMasterSku;
+        if ($fieldValue) {
+            $virtualMasterSku = $this->_oParent->getFieldData('oxartnum') . '-' . str_replace(' ', '', $fieldValue);
+            $this->_virtualMasterSku = $virtualMasterSku;
         }
 
-        return $this->_sVirtualMasterSku;
+        return $this->_virtualMasterSku;
     }
 
     /**
@@ -133,84 +139,87 @@ class ExportStatic extends ExportAbstract
             !isset($this->_aCsvAttributes['kategorie1']) ? null : $this->_aCsvAttributes['kategorie1'] = $this->_oParentExport->getAttributeValue('kategorie1');
             !isset($this->_aCsvAttributes['kategorie2']) ? null : $this->_aCsvAttributes['kategorie2'] = $this->_oParentExport->getAttributeValue('kategorie2');
             !isset($this->_aCsvAttributes['kategorie3']) ? null : $this->_aCsvAttributes['kategorie3'] = $this->_oParentExport->getAttributeValue('kategorie3');
+
             return;
         } elseif ($this->_oParent) {
-            $aCatIds = $this->_oParent->getCategoryIds();
+            $catIds = $this->_oParent->getCategoryIds();
         } else {
-            $aCatIds = $this->_oArticle->getCategoryIds();
+            $catIds = $this->_oArticle->getCategoryIds();
         }
 
-        $aCategories = array_slice($this->_getCategoryPaths($aCatIds), 0, 3);
+        $categories = array_slice($this->_getCategoryPaths($catIds), 0, 3);
 
-        if (count($aCategories)) {
+        if (count($categories)) {
             $i = 1;
-            foreach ($aCategories as $sCategoryPath) {
-                !isset($this->_aCsvAttributes['kategorie'.$i]) ? null : $this->_aCsvAttributes['kategorie'.$i] = $sCategoryPath;
+            foreach ($categories as $categoryPath) {
+                !isset($this->_aCsvAttributes['kategorie' . $i]) ? null : $this->_aCsvAttributes['kategorie' . $i] = $categoryPath;
                 $i++;
             }
         }
     }
 
     /**
-     * @param array $aCatIds
+     * @param array $catIds
      * @return array $aCatPaths
-     * @throws oxSystemComponentException
      */
-    private function _getCategoryPaths($aCatIds)
+    protected function _getCategoryPaths($catIds)
     {
-        static $oTmpCat = null;
+        static $tmpCat = null;
 
-        if ($oTmpCat === null) {
-            $oTmpCat = oxNew(\OxidEsales\Eshop\Application\Model\Category::class);
+        if ($tmpCat === null) {
+            /** @var Category $tmpCat */
+            $tmpCat = oxNew(Category::class);
         }
-        
-        static $aCategoryPath = [];
 
-        $aCatPaths = array();
-        foreach ($aCatIds as $sCat) {
-            $aTmp = explode('=', $sCat);
-            $sCatId = isset($aTmp[0]) ? $aTmp[0] : null;
-            $iTime = isset($aTmp[1]) ? (int)$aTmp[1] : null;
+        static $categoryPath = [];
 
-            if (!isset($aCategoryPath[$sCatId])) {
-                $oCat = clone $oTmpCat;
-                $oCat->load($sCatId);
-                $aCategories[$sCatId] = $oCat;
-                $sCatPath = str_replace('/', '%2F', html_entity_decode($oCat->oxcategories__oxtitle->rawValue, ENT_QUOTES|ENT_HTML401));
+        $catPaths = [];
+        $categories = [];
+        foreach ($catIds as $cat) {
+            $tmp = explode('=', $cat);
+            $catId = isset($tmp[0]) ? $tmp[0] : null;
+            $time = isset($tmp[1]) ? (int) $tmp[1] : null;
 
-                while ($oCat->oxcategories__oxid->value != $oCat->oxcategories__oxrootid->value) {
-                    $sParentCatId = $oCat->oxcategories__oxparentid->value;
-                    $oCat = clone $oTmpCat;
-                    $oCat->load($sParentCatId);
-                    $sCatPath = str_replace('/', '%2F', html_entity_decode($oCat->oxcategories__oxtitle->rawValue, ENT_QUOTES|ENT_HTML401)) . \ASign\EightSelect\Model\Export::EIGHTSELECT_CATEGORY_DELIMITER . $sCatPath;
+            if (!isset($categoryPath[$catId])) {
+                /** @var Category $category */
+                $category = clone $tmpCat;
+                $category->load($catId);
+                $categories[$catId] = $category;
+                $catPath = str_replace('/', '%2F', html_entity_decode($category->oxcategories__oxtitle->rawValue, ENT_QUOTES | ENT_HTML401));
+
+                while ($category->getId() != $category->getFieldData('oxrootid')) {
+                    $parentCatId = $category->getFieldData('oxparentid');
+                    $category = clone $tmpCat;
+                    $category->load($parentCatId);
+                    $catPath = str_replace('/', '%2F', html_entity_decode($category->oxcategories__oxtitle->rawValue, ENT_QUOTES | ENT_HTML401)) . Export::CATEGORY_DELIMITER . $catPath;
                 }
 
-                $aCategoryPath[$sCatId] = $sCatPath;
+                $categoryPath[$catId] = $catPath;
             }
 
-            if ($iTime == 1) {
-                array_unshift($aCatPaths, $aCategoryPath[$sCatId]);
+            if ($time == 1) {
+                array_unshift($catPaths, $categoryPath[$catId]);
             } else {
-                array_push($aCatPaths, $aCategoryPath[$sCatId]);
+                array_push($catPaths, $categoryPath[$catId]);
             }
         }
 
-        return array_filter(array_unique($aCatPaths));
+        return array_filter(array_unique($catPaths));
     }
 
     /**
      * Return article status
      *
-     * @param oxArticle $oArticle
+     * @param Article $article
      * @return int
      */
-    private function getArticleStatus($oArticle)
+    protected function getArticleStatus($article)
     {
-        if (!$oArticle->isVisible()) {
+        if (!$article->isVisible()) {
             return 0;
         }
 
-        if ($oArticle->oxarticles__oxstockflag->value == 3 && $oArticle->isNotBuyable()) {
+        if ($article->getFieldData('oxstockflag') == 3 && $article->isNotBuyable()) {
             return 0;
         }
 

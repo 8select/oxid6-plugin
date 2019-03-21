@@ -1,13 +1,10 @@
 <?php
 
-include(dirname(__FILE__).'/../bootstrap.php');
-
-$oDispatcher = \ASign\EightSelect\Core\Dispatcher::getInstance();
+require_once __DIR__ . '/../bootstrap.php';
 
 try {
-    $oDispatcher->dispatch(new \ASign\EightSelect\Core\Request());
+    $dispatcher = \OxidEsales\Eshop\Core\Registry::get(\ASign\EightSelect\Core\Dispatcher::class);
+    $dispatcher->dispatch(new \ASign\EightSelect\Core\Request());
 } catch (Exception $oEx) {
-    echo <<<EOT
-{$oEx->getMessage()}
-EOT;
+    echo $oEx->getMessage();
 }

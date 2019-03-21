@@ -2,6 +2,11 @@
 
 namespace ASign\EightSelect\Controller\Admin;
 
+use ASign\EightSelect\Model\Aws;
+use ASign\EightSelect\Model\Export;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\Request;
+
 /**
  * Class AdminExportUpload
  * @package ASign\EightSelect\Controller\Admin
@@ -36,8 +41,8 @@ class AdminExportUpload extends \OxidEsales\Eshop\Application\Controller\Admin\D
     {
         $this->_aViewData['refresh'] = 0;
 
-        $sType = \OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('upload_full') ? 'upload_full' : 'upload_update';
-        $this->_aViewData['sType'] = $sType;
+        $type = Registry::get(Request::class)->getRequestEscapedParameter('upload_full') ? 'upload_full' : 'upload_update';
+        $this->_aViewData['sType'] = $type;
     }
 
     /**
@@ -45,18 +50,19 @@ class AdminExportUpload extends \OxidEsales\Eshop\Application\Controller\Admin\D
      */
     public function run()
     {
-        $sFeedId = $this->getConfig()->getConfigParam('sEightSelectFeedId');
+        $feedId = $this->getConfig()->getConfigParam('sEightSelectFeedId');
 
-        if (!$sFeedId) {
-            $this->stop(\ASign\EightSelect\Model\Export::$err_nofeedid);
+        if (!$feedId) {
+            $this->stop(Export::ERR_NOFEEDID);
+
             return;
         }
 
-        $blFull = (bool)\OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('upload_full');
-        $sSourceFile = \ASign\EightSelect\Model\Export::getExportLatestFile($blFull);
+        $full = (bool) Registry::get(Request::class)->getRequestEscapedParameter('upload_full');
+        $sourceFile = Registry::get(Export::class)->getExportLatestFile($full);
 
         // check if file is readable
-        $this->fpFile = @fopen($sSourceFile, "r");
+        $this->fpFile = @fopen($sourceFile, "r");
         if (!isset($this->fpFile) || !$this->fpFile) {
             // we do have an error !
             $this->stop(ERR_FILEIO);
@@ -64,9 +70,10 @@ class AdminExportUpload extends \OxidEsales\Eshop\Application\Controller\Admin\D
             fclose($this->fpFile);
 
             try {
-                \ASign\EightSelect\Model\Aws::upload($sSourceFile, $sFeedId, $blFull);
+                Registry::get(Aws::class)->upload($sourceFile, $feedId, $full);
                 $this->stop(ERR_SUCCESS);
-            } catch (\Exception $oEx) {
+            } catch (\Exception $exception) {
+                Registry::getUtils()->writeToLog($exception, '8select.log');
                 $this->stop(ERR_GENERAL);
             }
         }

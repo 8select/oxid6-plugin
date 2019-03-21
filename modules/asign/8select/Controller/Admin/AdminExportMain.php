@@ -2,11 +2,13 @@
 
 namespace ASign\EightSelect\Controller\Admin;
 
+use OxidEsales\Eshop\Application\Controller\Admin\DynamicExportBaseController;
+
 /**
  * Class AdminExportMain
  * @package ASign\EightSelect\Controller\Admin
  */
-class AdminExportMain extends \OxidEsales\Eshop\Application\Controller\Admin\DynamicExportBaseController
+class AdminExportMain extends DynamicExportBaseController
 {
     /**
      * Export class name

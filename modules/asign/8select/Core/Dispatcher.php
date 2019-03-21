@@ -2,48 +2,38 @@
 
 namespace ASign\EightSelect\Core;
 
+use ASign\EightSelect\Controller\Admin\AdminExportDo;
+use OxidEsales\Eshop\Core\DatabaseProvider;
+
 /**
  * Class Dispatcher
  * @package ASign\EightSelect\Core
  */
 class Dispatcher
 {
-    protected static $oInstance = null;
-    protected $oRequest = null;
-    protected $aCommands = [];
+    protected $request = null;
 
     /**
-     * @return Dispatcher
-     */
-    public static function getInstance()
-    {
-        if (self::$oInstance === null) {
-            self::$oInstance = new self;
-        }
-
-        return self::$oInstance;
-    }
-
-    /**
-     * @param $request
+     * @param Request $request
      * @return bool
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * @throws \UnexpectedValueException
      */
     public function dispatch($request)
     {
-        $this->oRequest = $request;
+        $this->request = $request;
 
-        $sMethod = $this->oRequest->getArgument(\ASign\EightSelect\Core\Request::ARGUMENT_METHOD);
-        $iShopId = (int)$this->oRequest->getArgument(\ASign\EightSelect\Core\Request::ARGUMENT_SHOP_ID);
+        $method = $this->request->getArgument(Request::ARGUMENT_METHOD);
+        $shopId = (int) $this->request->getArgument(Request::ARGUMENT_SHOP_ID);
 
-        if (!\OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne('SELECT 1 FROM oxshops WHERE OXID = ?', [$iShopId])) {
-            throw new \UnexpectedValueException("Can't find ShopID {$iShopId}");
+        if (!DatabaseProvider::getDb()->getOne('SELECT 1 FROM oxshops WHERE OXID = ?', [$shopId])) {
+            throw new \UnexpectedValueException("Can't find ShopID {$shopId}");
         }
 
-        $oEightSelectExportDo = oxNew(\ASign\EightSelect\Controller\Admin\AdminExportDo::class);
+        $exportDo = oxNew(AdminExportDo::class);
 
-        if (method_exists($oEightSelectExportDo, $sMethod)) {
-            $oEightSelectExportDo->$sMethod($iShopId);
+        if (method_exists($exportDo, $method)) {
+            $exportDo->$method($shopId);
         } else {
             throw new \UnexpectedValueException('Command name not found');
         }

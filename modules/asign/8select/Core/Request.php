@@ -16,16 +16,15 @@ class Request
     const ARGUMENT_METHOD = 'e';
     const ARGUMENT_SHOP_ID = 's';
 
-    protected $aArguments = [];
+    protected $arguments = [];
 
     /**
-     *
-     * @param  array $aArguments
-     * @throws BadMethodCallException
+     * @param array $arguments
+     * @throws \BadMethodCallException
      */
-    public function __construct($aArguments = null)
+    public function __construct($arguments = null)
     {
-        $this->initArguments($aArguments);
+        $this->initArguments($arguments);
         if ($this->getArgument(self::ARGUMENT_METHOD) === null) {
             $this->showUsage();
 
@@ -40,29 +39,28 @@ class Request
     /**
      * return cli argument
      *
-     * @param   string $sArgument argument to retrieve
-     * @return  string|null argument value or null
+     * @param string $argument argument to retrieve
+     * @return string|null argument value or null
      */
-    public function getArgument($sArgument)
+    public function getArgument($argument)
     {
-        return isset($this->aArguments[$sArgument]) ? $this->aArguments[$sArgument] : null;
+        return isset($this->arguments[$argument]) ? $this->arguments[$argument] : null;
     }
 
     /**
-     * initializue the arguments from cli
+     * initialize the arguments from cli
      *
-     * @param  array $aArguments
-     * @return void
+     * @param array $arguments
      */
-    protected function initArguments($aArguments = null)
+    protected function initArguments($arguments = null)
     {
-        if ($aArguments !== null) {
-            $this->aArguments = $aArguments;
+        if ($arguments !== null) {
+            $this->arguments = $arguments;
 
             return;
         }
 
-        $this->aArguments = getopt(self::ARGUMENTS);
+        $this->arguments = getopt(self::ARGUMENTS);
     }
 
     /**

@@ -2,11 +2,19 @@
 
 namespace ASign\EightSelect\Controller\Admin;
 
+use ASign\EightSelect\Model\Export;
+use ASign\EightSelect\Model\Log;
+use OxidEsales\Eshop\Application\Controller\Admin\DynamicExportBaseController;
+use OxidEsales\Eshop\Application\Model\Article;
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\Request;
+
 /**
  * Class AdminExportDo
  * @package ASign\EightSelect\Controller\Admin
  */
-class AdminExportDo extends \OxidEsales\Eshop\Application\Controller\Admin\DynamicExportBaseController
+class AdminExportDo extends DynamicExportBaseController
 {
     /**
      * Export class name
@@ -32,7 +40,7 @@ class AdminExportDo extends \OxidEsales\Eshop\Application\Controller\Admin\Dynam
     /**
      * @var array
      */
-    private $_aParent = [];
+    protected $_aParent = [];
 
     /**
      * Prepares export
@@ -43,176 +51,177 @@ class AdminExportDo extends \OxidEsales\Eshop\Application\Controller\Admin\Dynam
         $this->_aViewData['iStart'] = 0;
 
         // prepare it
-        $iEnd = $this->prepareExport();
+        $end = $this->prepareExport();
 
-        \OxidEsales\Eshop\Core\Registry::getSession()->setVariable("iEnd", $iEnd);
-        $this->_aViewData['iEnd'] = $iEnd;
+        Registry::getSession()->setVariable("iEnd", $end);
+        $this->_aViewData['iEnd'] = $end;
 
-        $sType = \OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter("do_full") ? 'do_full' : 'do_update';
-        $this->_aViewData['sType'] = $sType;
+        $type = Registry::get(Request::class)->getRequestEscapedParameter("do_full") ? 'do_full' : 'do_update';
+        $this->_aViewData['sType'] = $type;
     }
 
     /**
      * Does export
+     * @throws \Exception
      */
     public function run()
     {
-        $blFull = (bool)\OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('do_full');
+        $full = (bool) Registry::get(Request::class)->getRequestEscapedParameter('do_full');
 
-        /** @var EightSelectExport $oEightSelectExport */
-        $oEightSelectExport = oxNew(\ASign\EightSelect\Model\Export::class);
+        /** @var Export $eightSelectExport */
+        $eightSelectExport = oxNew(Export::class);
 
-        /** @var eightselect_log $oEightSelectLog */
-        $oEightSelectLog = oxNew(\ASign\EightSelect\Model\Log::class);
-        $oEightSelectLog->startExport($blFull);
+        /** @var Log $eightSelectLog */
+        $eightSelectLog = oxNew(Log::class);
+        $eightSelectLog->startExport($full);
 
-        $mDateTime = $oEightSelectLog->getLastSuccessExportDate($blFull);
-        $oEightSelectLog->setLastSuccessExportDate($blFull);
+        $dateTime = $eightSelectLog->getLastSuccessExportDate($full);
+        $eightSelectLog->setLastSuccessExportDate($full);
 
         try {
-            $this->sExportFileName = $oEightSelectExport->getExportFileName($blFull);
+            $this->sExportFileName = $eightSelectExport->getExportFileName($full);
             $this->_sFilePath = $this->getConfig()->getConfigParam('sShopDir') . "/" . $this->sExportPath . $this->sExportFileName;
 
             parent::run();
 
-            $oEightSelectLog->successExport();
-        } catch (\Throwable $oEx) {
-            $this->stop(\ASign\EightSelect\Model\Export::$err_nofeedid);
-            $oEightSelectLog->errorExport($oEx->getMessage());
-            $oEightSelectLog->setLastSuccessExportDate($blFull, $mDateTime);
+            $eightSelectLog->successExport();
+        } catch (\Throwable $exception) {
+            $this->stop(Export::ERR_NOFEEDID);
+            $eightSelectLog->errorExport($exception->getMessage());
+            $eightSelectLog->setLastSuccessExportDate($full, $dateTime);
         }
     }
 
     /**
-     * @param int $iCnt
+     * @param int $count
      * @return bool|int
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    public function nextTick($iCnt)
+    public function nextTick($count)
     {
-        $iExportedItems = $iCnt;
-        $blContinue = false;
+        $exportedItems = $count;
+        $continue = false;
 
-        static $oEightSelectTmpExport = null;
+        /** @var Export $eightSelectTmpExport */
+        static $eightSelectTmpExport = null;
 
-        if ($oEightSelectTmpExport === null) {
-            $oEightSelectTmpExport = oxNew(\ASign\EightSelect\Model\Export::class);
+        if ($eightSelectTmpExport === null) {
+            $eightSelectTmpExport = oxNew(Export::class);
         }
 
-        if ($oArticle = $this->getOneArticle($iCnt, $blContinue)) {
+        /** @var Article $article */
+        if ($article = $this->getOneArticle($count, $continue)) {
+            $parentId = $article->getParentId();
 
-            $sParentId = $oArticle->oxarticles__oxparentid->value;
-
-            $oEightSelectExport = clone $oEightSelectTmpExport;
-            $oEightSelectExport->setArticle($oArticle);
+            $export = clone $eightSelectTmpExport;
+            $export->setArticle($article);
 
             // set parent article (performance loading)
-            if ($oArticle->isVariant() && !isset($this->_aParent[$sParentId])) {
+            if ($article->isVariant() && !isset($this->_aParent[$parentId])) {
                 // clear parent from other variant
                 $this->_aParent = [];
                 // $oParent can be false here: Check for this possibility
-                if ($oParent = $oArticle->getParentArticle()) {
-                    $this->_aParent[$sParentId]['article_parent'] = $oParent;
+                if ($parent = $article->getParentArticle()) {
+                    $this->_aParent[$parentId]['article_parent'] = $parent;
 
-                    /** @var eightselect_export $oEightSelectParentExport */
-                    $oEightSelectParentExport = clone $oEightSelectTmpExport;
-                    $oEightSelectParentExport->setArticle($oParent);
-                    $oEightSelectParentExport->initData();
-                    $this->_aParent[$sParentId]['export_parent'] = $oEightSelectParentExport;
+                    /** @var Export $parentExport */
+                    $parentExport = clone $eightSelectTmpExport;
+                    $parentExport->setArticle($parent);
+                    $parentExport->initData();
+                    $this->_aParent[$parentId]['export_parent'] = $parentExport;
                 }
             }
 
-            if ($oArticle->isVariant() && isset($this->_aParent[$sParentId])) {
-                $oEightSelectExport->setParent($this->_aParent[$oArticle->oxarticles__oxparentid->value]['article_parent']);
-                $oEightSelectExport->setParentExport($this->_aParent[$oArticle->oxarticles__oxparentid->value]['export_parent']);
+            if ($article->isVariant() && isset($this->_aParent[$parentId])) {
+                $export->setParent($this->_aParent[$parentId]['article_parent']);
+                $export->setParentExport($this->_aParent[$parentId]['export_parent']);
             }
 
             // set header if it's the first article
-            if ((int)$iCnt === 0) {
-                fwrite($this->fpFile, $oEightSelectExport->getCsvHeader());
+            if ((int) $count === 0) {
+                fwrite($this->fpFile, $export->getCsvHeader());
             }
 
             // write variant to CSV
-            fwrite($this->fpFile, $oEightSelectExport->getCsvLine());
+            fwrite($this->fpFile, $export->getCsvLine());
 
-            return ++$iExportedItems;
+            return ++$exportedItems;
         }
 
-        return $blContinue;
+        return $continue;
     }
 
     /**
      * Inserts articles into heaptable
      *
-     * @param string $sHeapTable
-     * @param string $sCatAdd
+     * @param string $heapTable
+     * @param string $catAdd
      * @return bool
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
-    protected function _insertArticles($sHeapTable, $sCatAdd)
+    protected function _insertArticles($heapTable, $catAdd)
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
+        $db = DatabaseProvider::getDb();
+        $exportLang = Registry::get(Request::class)->getRequestEscapedParameter("iExportLanguage");
 
-        $iExpLang = \OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter("iExportLanguage");
-
-        if (!isset($iExpLang)) {
-            $iExpLang = \OxidEsales\Eshop\Core\Registry::getSession()->getVariable("iExportLanguage");
+        if (!isset($exportLang)) {
+            $exportLang = Registry::getSession()->getVariable("iExportLanguage");
         }
 
-        $oArticle = oxNew(\OxidEsales\Eshop\Application\Model\Article::class);
-        $oArticle->setLanguage($iExpLang);
+        $article = oxNew(Article::class);
+        $article->setLanguage($exportLang);
 
-        $sArticleTable = getViewName("oxarticles", $iExpLang);
+        $articleTable = getViewName("oxarticles", $exportLang);
 
-        $sSelect = "INSERT INTO {$sHeapTable} ";
-        $sSelect .= "SELECT oxarticles.OXID FROM {$sArticleTable} as oxarticles ";
-        $sSelect .= "LEFT JOIN {$sArticleTable} AS mainart ON mainart.OXID = oxarticles.OXPARENTID ";
-        $sSelect .= "WHERE (oxarticles.OXPARENTID != '' OR (oxarticles.OXPARENTID = '' AND oxarticles.OXVARCOUNT = 0)) ";
+        $select = "INSERT INTO {$heapTable} ";
+        $select .= "SELECT oxarticles.OXID FROM {$articleTable} as oxarticles ";
+        $select .= "LEFT JOIN {$articleTable} AS mainart ON mainart.OXID = oxarticles.OXPARENTID ";
+        $select .= "WHERE (oxarticles.OXPARENTID != '' OR (oxarticles.OXPARENTID = '' AND oxarticles.OXVARCOUNT = 0)) ";
 
-        if ($sCatAdd) {
-            $sSelect .= $sCatAdd;
+        if ($catAdd) {
+            $select .= $catAdd;
         }
 
-        $blFull = (bool)\OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('do_full');
+        $full = (bool) Registry::get(Request::class)->getRequestEscapedParameter('do_full');
 
-        if ($blFull) {
-            $sSelect .= "AND " . $oArticle->getSqlActiveSnippet(true) . " ";
+        if ($full) {
+            $select .= "AND " . $article->getSqlActiveSnippet(true) . " ";
         } else {
-            $oEightSelectLog = oxNew(\ASign\EightSelect\Model\Log::class);
-            $mDateTime = $oEightSelectLog->getLastSuccessExportDate($blFull);
+            $log = oxNew(Log::class);
+            $dateTime = $log->getLastSuccessExportDate($full);
 
-            if ($mDateTime) {
-                $sSelect .= "AND (oxarticles.OXTIMESTAMP >= " . $oDB->quote($mDateTime) . " OR mainart.OXTIMESTAMP >= " . $oDB->quote($mDateTime) . ") ";
+            if ($dateTime) {
+                $select .= "AND (oxarticles.OXTIMESTAMP >= " . $db->quote($dateTime) . " OR mainart.OXTIMESTAMP >= " . $db->quote($dateTime) . ") ";
             }
         }
 
-        $sSelect .= "GROUP BY oxarticles.OXID ORDER BY oxarticles.OXARTNUM ASC";
+        $select .= "GROUP BY oxarticles.OXID ORDER BY oxarticles.OXARTNUM ASC";
+        file_put_contents(OX_BASE_PATH . 'log/0mzwack.log', date('[Y-m-d H:i:s] ') . __METHOD__ . ' '.$select . PHP_EOL, 8);
 
-        return $oDB->execute($sSelect) ? true : false;
+        return $db->execute($select) ? true : false;
     }
 
     /**
-     * @param string $sHeapTable
+     * @param string $heapTable
      */
-    protected function _removeParentArticles($sHeapTable)
+    protected function _removeParentArticles($heapTable)
     {
         /* we don't have parent articles in heap-table, so we can skip that */
     }
 
     /**
-     * @param $iShopId
-     * @param $sType
-     * @throws \oxConnectionException
+     * @param int    $shopId
+     * @param string $type
+     * @throws \Exception
      */
-    private function _exportCron($iShopId, $sType)
+    protected function _exportCron($shopId, $type)
     {
-        $oConfig = \OxidEsales\Eshop\Core\Registry::getConfig();
-        $oConfig->setShopId($iShopId);
-        $oConfig->init();
-        $this->setConfig($oConfig);
+        $config = Registry::getConfig();
+        $config->setShopId($shopId);
+        $config->reinitialize();
 
-        $_GET[$sType] = true;
+        $_GET[$type] = true;
         $_GET['iStart'] = 0;
         $_GET['refresh'] = 0;
 
@@ -224,76 +233,72 @@ class AdminExportDo extends \OxidEsales\Eshop\Application\Controller\Admin\Dynam
     }
 
     /**
-     * @param $iShopId
-     * @param $sType
-     * @throws \oxConnectionException
+     * @param int    $shopId
+     * @param string $type
      */
-    private function _uploadCron($iShopId, $sType)
+    protected function _uploadCron($shopId, $type)
     {
-        $oConfig = \OxidEsales\Eshop\Core\Registry::getConfig();
-        $oConfig->setShopId($iShopId);
-        $oConfig->init();
-        $this->setConfig($oConfig);
+        $config = Registry::getConfig();
+        $config->setShopId($shopId);
+        $config->reinitialize();
 
-        $_GET[$sType] = true;
+        $_GET[$type] = true;
 
-        $oUpload = oxNew(\ASign\EightSelect\Controller\Admin\AdminExportUpload::class);
-        $oUpload->run();
+        $upload = oxNew(AdminExportUpload::class);
+        $upload->run();
     }
 
     /**
-     * @param $iShopId
-     * @throws \oxConnectionException
+     * @param int $shopId
+     * @throws \Exception
      */
-    public function export_full($iShopId)
+    public function export_full($shopId)
     {
-        $this->_exportCron($iShopId, 'do_full');
+        $this->_exportCron($shopId, 'do_full');
     }
 
     /**
-     * @param $iShopId
-     * @throws \oxConnectionException
+     * @param int $shopId
+     * @throws \Exception
      */
-    public function export_update($iShopId)
+    public function export_update($shopId)
     {
-        $this->_exportCron($iShopId, 'do_update');
+        $this->_exportCron($shopId, 'do_update');
     }
 
     /**
-     * @param $iShopId
-     * @throws \oxConnectionException
+     * @param int $shopId
      */
-    public function upload_full($iShopId)
+    public function upload_full($shopId)
     {
-        $this->_uploadCron($iShopId, 'upload_full');
+        $this->_uploadCron($shopId, 'upload_full');
     }
 
     /**
-     * @param $iShopId
-     * @throws \oxConnectionException
+     * @param int $shopId
      */
-    public function upload_update($iShopId)
+    public function upload_update($shopId)
     {
-        $this->_uploadCron($iShopId, 'upload_update');
+        $this->_uploadCron($shopId, 'upload_update');
     }
 
     /**
-     * @param $iShopId
-     * @throws \oxConnectionException
+     * @param int $shopId
+     * @throws \Exception
      */
-    public function export_upload_full($iShopId)
+    public function export_upload_full($shopId)
     {
-        $this->export_full($iShopId);
-        $this->upload_full($iShopId);
+        $this->export_full($shopId);
+        $this->upload_full($shopId);
     }
 
     /**
-     * @param $iShopId
-     * @throws \oxConnectionException
+     * @param int $shopId
+     * @throws \Exception
      */
-    public function export_upload_update($iShopId)
+    public function export_upload_update($shopId)
     {
-        $this->export_update($iShopId);
-        $this->upload_update($iShopId);
+        $this->export_update($shopId);
+        $this->upload_update($shopId);
     }
 }

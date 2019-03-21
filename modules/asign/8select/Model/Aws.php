@@ -4,6 +4,7 @@ namespace ASign\EightSelect\Model;
 
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
+use OxidEsales\Eshop\Core\Registry;
 
 /**
  * Class EightSelectAws
@@ -11,50 +12,51 @@ use Aws\S3\Exception\S3Exception;
  */
 class Aws extends \OxidEsales\Eshop\Core\Model\BaseModel
 {
-    CONST CREDENTIAL_PROD_BUCKET_URL = '__SUBDOMAIN__.8select.io';
-    CONST CREDENTIAL_PROD_KEY = '__S3_PLUGIN_USER_ACCESS_KEY__';
-    CONST CREDENTIAL_PROD_SEC = '__S3_PLUGIN_USER_ACCESS_KEY_SECRET__';
+    const CREDENTIAL_PROD_BUCKET_URL = '__SUBDOMAIN__.8select.io';
+    const CREDENTIAL_PROD_KEY = '__S3_PLUGIN_USER_ACCESS_KEY__';
+    const CREDENTIAL_PROD_SEC = '__S3_PLUGIN_USER_ACCESS_KEY_SECRET__';
 
     /**
      * @var string
      */
-    static private $_sExportRemotePath = '#FEEDID#/#FEEDTYPE#/#YEAR#/#MONTH#/#DAY#/';
+    protected $_sExportRemotePath = '#FEEDID#/#FEEDTYPE#/#YEAR#/#MONTH#/#DAY#/';
 
     /**
-     * @param string $sSourceFile
-     * @param string $sFeedId
-     * @param bool $blFull
+     * @param string $sourceFile
+     * @param string $feedId
+     * @param bool   $full
+     * @throws \Exception
      */
-    public static function upload($sSourceFile, $sFeedId, $blFull)
+    public function upload($sourceFile, $feedId, $full)
     {
-        $oEightSelectLog = oxNew(\ASign\EightSelect\Model\Log::class);
-        $sAction = 'Upload ' . ($blFull ? 'Full' : 'Update');
+        $log = oxNew(Log::class);
+        $action = 'Upload ' . ($full ? 'Full' : 'Update');
 
         try {
-            $s3Client = new S3Client([
+            $awsS3Client = new S3Client([
                 'region'      => 'eu-central-1',
                 'version'     => '2006-03-01',
                 'credentials' => [
-                    'key'    => self::_getCredentialKey(),
-                    'secret' => self::_getCredentialSecret(),
+                    'key'    => $this->_getCredentialKey(),
+                    'secret' => $this->_getCredentialSecret(),
                 ],
             ]);
 
-            $s3Client->putObject([
+            $awsS3Client->putObject([
                 'ACL'        => 'bucket-owner-full-control',
-                'Bucket'     => self::_getBucketUrl(),
-                'Key'        => self::_getRemotePath($sFeedId, $blFull) . basename($sSourceFile),
-                'SourceFile' => $sSourceFile,
+                'Bucket'     => $this->_getBucketUrl(),
+                'Key'        => $this->_getRemotePath($feedId, $full) . basename($sourceFile),
+                'SourceFile' => $sourceFile,
             ]);
 
-            \ASign\EightSelect\Model\Export::clearExportLocalFolder($blFull);
+            Registry::get(Export::class)->clearExportLocalFolder($full);
 
-            $oEightSelectLog->addLog($sAction, 'Upload successfully');
-        } catch (S3Exception $oEx) {
-            $oEightSelectLog->addLog($sAction, "AWS S3Exception - Upload error\n" . $oEx->getMessage());
+            $log->addLog($action, 'Upload successfully');
+        } catch (S3Exception $exception) {
+            $log->addLog($action, "AWS S3Exception - Upload error\n" . $exception->getMessage());
             throw new \UnexpectedValueException('Upload fails');
-        } catch (\Exception $oEx) {
-            $oEightSelectLog->addLog($sAction, "AWS Exception - Upload error\n" . $oEx->getMessage());
+        } catch (\Exception $exception) {
+            $log->addLog($action, "AWS Exception - Upload error\n" . $exception->getMessage());
             throw new \UnexpectedValueException('Upload fails');
         }
     }
@@ -62,7 +64,7 @@ class Aws extends \OxidEsales\Eshop\Core\Model\BaseModel
     /**
      * @return string
      */
-    private static function _getBucketUrl()
+    protected function _getBucketUrl()
     {
         return self::CREDENTIAL_PROD_BUCKET_URL;
     }
@@ -70,7 +72,7 @@ class Aws extends \OxidEsales\Eshop\Core\Model\BaseModel
     /**
      * @return string
      */
-    private static function _getCredentialKey()
+    protected function _getCredentialKey()
     {
         return self::CREDENTIAL_PROD_KEY;
     }
@@ -78,28 +80,26 @@ class Aws extends \OxidEsales\Eshop\Core\Model\BaseModel
     /**
      * @return string
      */
-    private static function _getCredentialSecret()
+    protected function _getCredentialSecret()
     {
         return self::CREDENTIAL_PROD_SEC;
     }
 
     /**
-     * @param $sFeedId
-     * @param $blFull
-     * @return mixed
+     * @param string $feedId
+     * @param bool   $full
+     * @return string
      */
-    private static function _getRemotePath($sFeedId, $blFull)
+    protected function _getRemotePath($feedId, $full)
     {
-        $aParams = [
-            '#FEEDID#'   => $sFeedId,
-            '#FEEDTYPE#' => $blFull ? 'product_feed' : 'property_feed',
+        $params = [
+            '#FEEDID#'   => $feedId,
+            '#FEEDTYPE#' => $full ? 'product_feed' : 'property_feed',
             '#YEAR#'     => date('Y'),
             '#MONTH#'    => date('m'),
             '#DAY#'      => date('d'),
         ];
 
-        $sPath = str_replace(array_keys($aParams), $aParams, self::$_sExportRemotePath);
-
-        return $sPath;
+        return str_replace(array_keys($params), $params, $this->_sExportRemotePath);
     }
 }

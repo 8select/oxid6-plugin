@@ -2,6 +2,12 @@
 
 namespace ASign\EightSelect\Component;
 
+use ASign\EightSelect\Model\Attribute2Oxid;
+use OxidEsales\Eshop\Application\Model\Article;
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\Request;
+
 /**
  * Class BasketComponent
  * @package ASign\EightSelect\Component
@@ -11,136 +17,134 @@ class BasketComponent extends BasketComponent_parent
     /**
      * To basket
      *
-     * @param null $sProductId
-     * @param null $dAmount
-     * @param null $aSel
-     * @param null $aPersParam
-     * @param bool $blOverride
+     * @param string $productId
+     * @param int    $amount
+     * @param array  $sel
+     * @param array  $persParam
+     * @param bool   $override
      * @return mixed
      */
-    public function toBasket($sProductId = null, $dAmount = null, $aSel = null, $aPersParam = null, $blOverride = false)
+    public function toBasket($productId = null, $amount = null, $sel = null, $persParam = null, $override = false)
     {
-        $sSKU = \OxidEsales\Eshop\Core\Registry::getConfig()->getRequestParameter('sku');
+        $sku = Registry::get(Request::class)->getRequestEscapedParameter('sku');
 
-        if ($sSKU) {
-            $oArticle = $this->_loadArticleWithSKU($sSKU);
+        if ($sku) {
+            $article = $this->_loadArticleWithSKU($sku);
 
-            if ($oArticle->exists()) {
-                $sProductId = $oArticle->getId();
+            if ($article->exists()) {
+                $productId = $article->getId();
             }
         }
 
-        return parent::toBasket($sProductId, $dAmount, $aSel, $aPersParam, $blOverride);
+        return parent::toBasket($productId, $amount, $sel, $persParam, $override);
     }
 
     /**
      * Load article with SKU
      *
-     * @param $sSKU
-     * @return object|\OxidEsales\Eshop\Application\Model\Article
+     * @param string $sku
+     * @return Article
      */
-    protected function _loadArticleWithSKU($sSKU)
+    protected function _loadArticleWithSKU($sku)
     {
-        $oAttr2oxid = oxNew(\ASign\EightSelect\Model\Attribute2Oxid::class);
+        /** @var Attribute2Oxid $attribute2oxid */
+        $attribute2oxid = oxNew(Attribute2Oxid::class);
 
-        $sViewName = $oAttr2oxid->getViewName();
-        $sSql = "SELECT * FROM {$sViewName} WHERE {$sViewName}.ESATTRIBUTE = 'sku'";
-        $blLoaded = $oAttr2oxid->assignRecord($sSql);
+        $viewName = $attribute2oxid->getViewName();
+        $query = "SELECT * FROM {$viewName} WHERE {$viewName}.ESATTRIBUTE = 'sku'";
+        $loaded = $attribute2oxid->assignRecord($query);
 
-        $oArticle = oxNew(\OxidEsales\Eshop\Application\Model\Article::class);
+        $article = oxNew(Article::class);
 
-        if ($blLoaded) {
-            $sType = $oAttr2oxid->eightselect_attribute2oxid__oxtype->value;
+        if ($loaded) {
+            $type = $attribute2oxid->getFieldData('oxtype');
 
-            if ($sType === 'oxarticlesfield') {
-                $oArticle->load( $this->_loadByArticlesField($oAttr2oxid, $sSKU) );
-            } elseif($sType === 'oxartextendsfield') {
-                $oArticle->load( $this->_loadByArtExtendsField($oAttr2oxid, $sSKU) );
-            } elseif($sType === 'oxattributeid') {
-                $oArticle->load( $this->_loadByAttribute($oAttr2oxid, $sSKU) );
-            } elseif($sType === 'oxvarselect') {
-                $oArticle->load( $this->_loadByVarSelect($oAttr2oxid, $sSKU) );
+            if ($type === 'oxarticlesfield') {
+                $article->load($this->_loadByArticlesField($attribute2oxid, $sku));
+            } elseif ($type === 'oxartextendsfield') {
+                $article->load($this->_loadByArtExtendsField($attribute2oxid, $sku));
+            } elseif ($type === 'oxattributeid') {
+                $article->load($this->_loadByAttribute($attribute2oxid, $sku));
+            } elseif ($type === 'oxvarselect') {
+                $article->load($this->_loadByVarSelect($sku));
             }
-
         }
 
-        return $oArticle;
+        return $article;
     }
 
     /**
      * Load by articles field
      *
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
-     * @param $sSKU
+     * @param Attribute2Oxid $attribute2oxid
+     * @param string         $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _loadByArticlesField(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid, $sSKU)
+    protected function _loadByArticlesField(Attribute2Oxid $attribute2oxid, $sku)
     {
-        $sTable = getViewName('oxarticles');
-        $sArticleField = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $view = getViewName('oxarticles');
+        $articleField = $attribute2oxid->getFieldData('oxobject');
 
-        $sSql = "SELECT OXID FROM {$sTable} WHERE {$sArticleField} = ?";
+        $query = "SELECT OXID FROM {$view} WHERE {$articleField} = ?";
 
-        return \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, [$sSKU]);
+        return DatabaseProvider::getDb()->getOne($query, [$sku]);
     }
 
     /**
      * Load by art extends field
      *
-     * @param \ASign\EightSelect\Model\EightSelectAttribute2Oxid $oAttr2oxid
-     * @param $sSKU
+     * @param Attribute2Oxid $attribute2oxid
+     * @param string         $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _loadByArtExtendsField(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid, $sSKU)
+    protected function _loadByArtExtendsField(Attribute2Oxid $attribute2oxid, $sku)
     {
-        $sTable = getViewName('oxartextends');
-        $sArtExtendsField = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $view = getViewName('oxartextends');
+        $artExtendsField = $attribute2oxid->getFieldData('oxobject');
 
-        $sSql = "SELECT OXID FROM {$sTable} WHERE {$sArtExtendsField} = ?";
+        $query = "SELECT OXID FROM {$view} WHERE {$artExtendsField} = ?";
 
-        return \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, [$sSKU]);
+        return DatabaseProvider::getDb()->getOne($query, [$sku]);
     }
 
     /**
      * Load by attribute
      *
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
-     * @param $sSKU
+     * @param Attribute2Oxid $attribute2oxid
+     * @param string         $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _loadByAttribute(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid, $sSKU)
+    protected function _loadByAttribute(Attribute2Oxid $attribute2oxid, $sku)
     {
-        $sAttributeTable = getViewName('oxattribute');
-        $sO2ATable = getViewName('oxobject2attribute');
-        $sAttributeId = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $attributeTable = getViewName('oxattribute');
+        $object2AttributeTable = getViewName('oxobject2attribute');
+        $attributeId = $attribute2oxid->getFieldData('oxobject');
 
-        $sSql = "SELECT o2a.OXOBJECTID
-                  FROM {$sAttributeTable} AS oxattribute
-                  JOIN {$sO2ATable} AS o2a ON oxattribute.OXID = o2a.OXATTRID
+        $query = "SELECT o2a.OXOBJECTID
+                  FROM {$attributeTable} AS oxattribute
+                  JOIN {$object2AttributeTable} AS o2a ON oxattribute.OXID = o2a.OXATTRID
                   WHERE oxattribute.OXID = ?
                     AND o2a.OXVALUE = ?";
 
-        return \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, [$sAttributeId, $sSKU]);
+        return DatabaseProvider::getDb()->getOne($query, [$attributeId, $sku]);
     }
 
     /**
      * Load by var select
      *
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
-     * @param $sSKU
+     * @param string $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _loadByVarSelect(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid, $sSKU)
+    protected function _loadByVarSelect($sku)
     {
-        $sTable = getViewName('oxarticles');
-        $sArticleField = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $view = getViewName('oxarticles');
 
-        $sSql = "SELECT OXID FROM {$sTable} WHERE OXVARSELECT LIKE ?";
+        $query = "SELECT OXID FROM {$view} WHERE OXVARSELECT LIKE ?";
 
-        return \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, ['%' . $sSKU . '%']);
+        return DatabaseProvider::getDb()->getOne($query, ['%' . $sku . '%']);
     }
 }

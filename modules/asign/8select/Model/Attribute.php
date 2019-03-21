@@ -2,78 +2,76 @@
 
 namespace ASign\EightSelect\Model;
 
+use OxidEsales\Eshop\Core\Model\BaseModel;
+
 /**
  * Class Attribute
  * @package ASign\EightSelect\Model
  */
-class Attribute extends \OxidEsales\Eshop\Core\Model\BaseModel
+class Attribute extends BaseModel
 {
-    /**
-     * Current class name
-     *
-     * @var string
-     */
+    /** @var string Current class name */
     protected $_sClassName = 'Attribute';
 
     /** @var array */
-    protected $_aFields = [];
+    protected $_fieldsSorted;
 
     /** @var array */
-    protected $_aEightselectFieldsSorted = null;
+    protected $_fieldsByType;
 
     /**
      * All fields with additional data
      *
      * @var array
      */
-    protected $_aEightselectFields = [
+    protected $_fields = [
         'sku'            => [
             'propertyFeedName' => 'prop_sku',
-            'labelName'    => 'SKU',
-            'labelDescr'   => 'Die Sku ist einzigartig, sie enthält Modell, Farbe und Größe',
-            'required'     => true,
-            'configurable' => true,
-            'forUpdate'    => true,
+            'labelName'        => 'SKU',
+            'labelDescr'       => 'Die Sku ist einzigartig, sie enthält Modell, Farbe und Größe',
+            'required'         => true,
+            'configurable'     => true,
+            'forUpdate'        => true,
         ],
         'mastersku'      => [
             'propertyFeedName' => 'prop_parentSku',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'status'         => [
             'propertyFeedName' => 'prop_isInStock',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'ean'            => [
             'propertyFeedName' => 'prop_ean',
-            'labelName'    => 'EAN-Code',
-            'labelDescr'   => 'Standardisierte eindeutige Materialnummer nach EAN (European Article Number) oder UPC (Unified Product Code).',
-            'required'     => false,
-            'configurable' => true,
-            'forUpdate'    => true,
+            'labelName'        => 'EAN-Code',
+            'labelDescr'       => 'Standardisierte eindeutige Materialnummer nach EAN (European Article Number) oder UPC (Unified Product Code).',
+            'required'         => false,
+            'configurable'     => true,
+            'forUpdate'        => true,
         ],
         'model'          => [
             'propertyFeedName' => 'prop_model',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'name1'          => [
             'propertyFeedName' => 'prop_name',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'name2'          => [
             'labelName'    => 'Alternative Artikelbezeichnung',
@@ -105,35 +103,35 @@ class Attribute extends \OxidEsales\Eshop\Core\Model\BaseModel
         ],
         'streich_preis'  => [
             'propertyFeedName' => 'prop_retailPrice',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'angebots_preis' => [
             'propertyFeedName' => 'prop_discountPrice',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'groesse'        => [
             'propertyFeedName' => 'prop_size',
-            'labelName'    => 'Größe',
-            'labelDescr'   => 'Name der Varianten-Auswahl für "Größe" (siehe "Artikel verwalten" -> "Artikel" -> "Varianten" -> "Name der Auswahl")<br />Mehrfachauswahl möglich',
-            'required'     => true,
-            'configurable' => true,
-            'forUpdate'    => true,
+            'labelName'        => 'Größe',
+            'labelDescr'       => 'Name der Varianten-Auswahl für "Größe" (siehe "Artikel verwalten" -> "Artikel" -> "Varianten" -> "Name der Auswahl")<br />Mehrfachauswahl möglich',
+            'required'         => true,
+            'configurable'     => true,
+            'forUpdate'        => true,
         ],
         'marke'          => [
             'propertyFeedName' => 'prop_brand',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'bereich'        => [
             'labelName'    => 'Bereich',
@@ -172,11 +170,11 @@ class Attribute extends \OxidEsales\Eshop\Core\Model\BaseModel
         ],
         'farbe'          => [
             'propertyFeedName' => 'prop_color',
-            'labelName'    => 'Farbe',
-            'labelDescr'   => 'Name der Varianten-Auswahl für "Farbe" (siehe "Artikel verwalten" -> "Artikel" -> "Varianten" -> "Name der Auswahl")<br />Mehrfachauswahl möglich',
-            'required'     => true,
-            'configurable' => true,
-            'forUpdate'    => true,
+            'labelName'        => 'Farbe',
+            'labelDescr'       => 'Name der Varianten-Auswahl für "Farbe" (siehe "Artikel verwalten" -> "Artikel" -> "Varianten" -> "Name der Auswahl")<br />Mehrfachauswahl möglich',
+            'required'         => true,
+            'configurable'     => true,
+            'forUpdate'        => true,
         ],
         'farbspektrum'   => [
             'labelName'    => 'Farbspektrum',
@@ -334,27 +332,27 @@ class Attribute extends \OxidEsales\Eshop\Core\Model\BaseModel
         ],
         'produkt_url'    => [
             'propertyFeedName' => 'prop_url',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'bilder'         => [
             'propertyFeedName' => 'images',
-            'labelName'    => '',
-            'labelDescr'   => '',
-            'required'     => true,
-            'configurable' => false,
-            'forUpdate'    => true,
+            'labelName'        => '',
+            'labelDescr'       => '',
+            'required'         => true,
+            'configurable'     => false,
+            'forUpdate'        => true,
         ],
         'beschreibung'   => [
             'propertyFeedName' => 'prop_description',
-            'labelName'    => 'Beschreibung HTML',
-            'labelDescr'   => 'Der Beschreibungstext zum Artikel im HTML-Format',
-            'required'     => true,
-            'configurable' => true,
-            'forUpdate'    => true,
+            'labelName'        => 'Beschreibung HTML',
+            'labelDescr'       => 'Der Beschreibungstext zum Artikel im HTML-Format',
+            'required'         => true,
+            'configurable'     => true,
+            'forUpdate'        => true,
         ],
         'beschreibung1'  => [
             'labelName'    => 'Beschreibung Text',
@@ -385,56 +383,57 @@ class Attribute extends \OxidEsales\Eshop\Core\Model\BaseModel
      * @param bool get fields as sorted array (first: required; second; name)
      * @return array
      */
-    public function getAllFields($blSorted = false)
+    public function getAllFields($sorted = false)
     {
-        if (!$blSorted) {
-            return $this->_aEightselectFields;
+        if (!$sorted) {
+            return $this->_fields;
         }
 
-        if ($this->_aEightselectFieldsSorted !== null) {
-            return $this->_aEightselectFieldsSorted;
+        if ($this->_fieldsSorted !== null) {
+            return $this->_fieldsSorted;
         }
 
-        $this->_aEightselectFieldsSorted = $this->_aEightselectFields;
+        $this->_fieldsSorted = $this->_fields;
 
-        uasort($this->_aEightselectFieldsSorted, function ($a, $b) {
-            $sALabel = str_replace(['Ä', 'Ö', 'Ü'], ['Aa', 'Oa', 'Ua'], $a['labelName']);
-            $sBLabel = str_replace(['Ä', 'Ö', 'Ü'], ['Aa', 'Oa', 'Ua'], $b['labelName']);
+        uasort($this->_fieldsSorted, function ($a, $b) {
+            $firstLabel = str_replace(['Ä', 'Ö', 'Ü'], ['Aa', 'Oa', 'Ua'], $a['labelName']);
+            $secondLabel = str_replace(['Ä', 'Ö', 'Ü'], ['Aa', 'Oa', 'Ua'], $b['labelName']);
 
             if ($a['required'] == $b['required']) {
-                if ($sALabel == $sBLabel) {
+                if ($firstLabel == $secondLabel) {
                     return 0;
                 }
 
-                return $sALabel < $sBLabel ? -1 : 1;
+                return $firstLabel < $secondLabel ? -1 : 1;
             }
 
             return $a['required'] > $b['required'] ? -1 : 1;
         });
 
-        return $this->_aEightselectFieldsSorted;
+        return $this->_fieldsSorted;
     }
 
     /**
-     * @param string Field type (e.g. 'configurable' or 'forUpdate')
+     * @param string $fieldType Field type (e.g. 'configurable' or 'forUpdate')
+     * @param bool   $sorted
      * @return array
      */
-    public function getFieldsByType($sFieldType, $blSorted = false)
+    public function getFieldsByType($fieldType, $sorted = false)
     {
-        if (isset($this->_aFieldsByType[$sFieldType])) {
-            return $this->_aFieldsByType[$sFieldType];
+        if (isset($this->_fieldsByType[$fieldType])) {
+            return $this->_fieldsByType[$fieldType];
         }
 
-        $aFields = [];
+        $fields = [];
 
-        foreach ($this->getAllFields($blSorted) as $sName => $aFieldProps) {
-            if ($aFieldProps[$sFieldType]) {
-                $aFields[] = $sName;
+        foreach ($this->getAllFields($sorted) as $name => $fieldProps) {
+            if ($fieldProps[$fieldType]) {
+                $fields[] = $name;
             }
         }
 
-        $this->_aFieldsByType[$sFieldType] = array_intersect_key($this->getAllFields($blSorted), array_flip($aFields));
+        $this->_fieldsByType[$fieldType] = array_intersect_key($this->getAllFields($sorted), array_flip($fields));
 
-        return $this->_aFieldsByType[$sFieldType];
+        return $this->_fieldsByType[$fieldType];
     }
 }

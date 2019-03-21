@@ -2,15 +2,24 @@
 
 namespace ASign\EightSelect\Core;
 
+use ASign\EightSelect\Model\Attribute2Oxid;
+use ASign\EightSelect\Model\Log;
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\DbMetaDataHandler;
+use OxidEsales\Eshop\Core\Module\Module;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\UtilsObject;
+
 /**
  * Class Events
  * @package ASign\EightSelect\Core
  */
 class Events
 {
-    static private $oMetaDataHandler = null;
-    static private $sLogTable = null;
-    static private $sAttribute2OxidTable = null;
+    /** @var DbMetaDataHandler */
+    static protected $metaDataHandler = null;
+    static protected $logTable = null;
+    static protected $attribute2OxidTable = null;
 
     /**
      * Execute action on activate event
@@ -23,61 +32,63 @@ class Events
         self::_addAttributes2Oxid();
 
         try {
-            $oEightSelectModule = oxNew(\OxidEsales\Eshop\Core\Module\Module::class);
-            $oEightSelectModule->load('asign_8select');
+            /** @var Module $module */
+            $module = oxNew(Module::class);
+            $module->load('asign_8select');
 
             self::_clearSmartyCache();
 
-            $oEightSelectLog = oxNew(\ASign\EightSelect\Model\Log::class);
-            $oEightSelectLog->addLog('Module onActivate', 'Version: ' . $oEightSelectModule->getInfo('version') . ' success');
-        } catch (\Exception $oEx) {
+            /** @var Log $log */
+            $log = oxNew(Log::class);
+            $log->addLog('Module onActivate', 'Version: ' . $module->getInfo('version') . ' success');
+        } catch (\Exception $exception) {
+            Registry::getUtils()->writeToLog($exception, '8select.log');
         }
     }
 
     /**
      * Execute action on deactivate event
-     *
-     * @return null
      */
     public static function onDeactivate()
     {
         try {
-            /** @var oxModule $oEightSelectModule */
-            $oEightSelectModule = oxNew(\OxidEsales\Eshop\Core\Module\Module::class);
-            $oEightSelectModule->load('asign_8select');
+            /** @var Module $module */
+            $module = oxNew(Module::class);
+            $module->load('asign_8select');
 
             self::_clearSmartyCache();
 
-            /** @var eightselect_log $oEightSelectLog */
-            $oEightSelectLog = oxNew(\ASign\EightSelect\Model\Log::class);
-            $oEightSelectLog->addLog('Module onDeactivate', 'Version: ' . $oEightSelectModule->getInfo('version') . ' success');
-        } catch (\Exception $oEx) {
+            /** @var Log $log */
+            $log = oxNew(Log::class);
+            $log->addLog('Module onDeactivate', 'Version: ' . $module->getInfo('version') . ' success');
+        } catch (\Exception $exception) {
+            Registry::getUtils()->writeToLog($exception, '8select.log');
         }
     }
 
     /**
      * Init
      */
-    private static function _init()
+    protected static function _init()
     {
-        self::$oMetaDataHandler = oxNew(\OxidEsales\Eshop\Core\DbMetaDataHandler::class);
+        self::$metaDataHandler = oxNew(DbMetaDataHandler::class);
 
-        $o8SelectLog = oxNew(\ASign\EightSelect\Model\Log::class);
-        self::$sLogTable = $o8SelectLog->getCoreTableName();
+        $log = oxNew(Log::class);
+        self::$logTable = $log->getCoreTableName();
 
-        $o8SelectAttribute2Oxid = oxNew(\ASign\EightSelect\Model\Attribute2Oxid::class);
-        self::$sAttribute2OxidTable = $o8SelectAttribute2Oxid->getCoreTableName();
+        $attribute2Oxid = oxNew(Attribute2Oxid::class);
+        self::$attribute2OxidTable = $attribute2Oxid->getCoreTableName();
     }
 
     /**
      * Add logging table
      */
-    private static function _addLogTable()
+    protected static function _addLogTable()
     {
-        $sTableName = self::$sLogTable;
+        $tableName = self::$logTable;
 
-        if (!self::$oMetaDataHandler->tableExists($sTableName)) {
-            $sSql = "CREATE TABLE `{$sTableName}` (
+        if (!self::$metaDataHandler->tableExists($tableName)) {
+            $query = "CREATE TABLE `{$tableName}` (
                         `OXID` VARCHAR(32) NOT NULL,
                         `EIGHTSELECT_ACTION` VARCHAR(255),
                         `EIGHTSELECT_MESSAGE` TEXT,
@@ -86,19 +97,19 @@ class Events
                         PRIMARY KEY (`OXID`)
                       ) CHARSET=utf8";
 
-            \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSql);
+            DatabaseProvider::getDb()->execute($query);
         }
     }
 
     /**
      * Add attribute 2 Oxid table
      */
-    private static function _addAttribute2OxidTable()
+    protected static function _addAttribute2OxidTable()
     {
-        $sTableName = self::$sAttribute2OxidTable;
+        $tableName = self::$attribute2OxidTable;
 
-        if (!self::$oMetaDataHandler->tableExists($sTableName)) {
-            $sSql = "CREATE TABLE `{$sTableName}` (
+        if (!self::$metaDataHandler->tableExists($tableName)) {
+            $query = "CREATE TABLE `{$tableName}` (
                         `OXID` VARCHAR(32) NOT NULL,
                         `OXSHOPID` INT(11) NOT NULL,
                         `ESATTRIBUTE` VARCHAR(32) NOT NULL,
@@ -108,7 +119,7 @@ class Events
                         PRIMARY KEY (`OXID`)
                       ) CHARSET=utf8";
 
-            \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSql);
+            DatabaseProvider::getDb()->execute($query);
         }
     }
 
@@ -118,9 +129,11 @@ class Events
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
-    private static function _addAttributes2Oxid()
+    protected static function _addAttributes2Oxid()
     {
-        $aAttributes2Oxid = [
+        $shopId = Registry::getConfig()->getShopId();
+
+        $attributes2Oxid = [
             [
                 'eightselectAttribute' => 'sku',
                 'oxidObject'           => 'OXARTNUM',
@@ -148,14 +161,14 @@ class Events
             ],
         ];
 
-        $oUtils = oxNew(\OxidEsales\Eshop\Core\UtilsObject::class);
+        $utilsObject = oxNew(UtilsObject::class);
 
-        $sSqlCheck = 'SELECT 1 FROM `' . self::$sAttribute2OxidTable . '` WHERE `ESATTRIBUTE` = ? AND OXSHOPID = ?';
-        $sSqlInsert = 'INSERT INTO `' . self::$sAttribute2OxidTable . '` (`OXID`, `OXSHOPID`, `ESATTRIBUTE`, `OXOBJECT`,  `OXTYPE`) VALUES (?, ?, ?, ?, ?)';
+        $checkQuery = 'SELECT 1 FROM `' . self::$attribute2OxidTable . '` WHERE `ESATTRIBUTE` = ? AND OXSHOPID = ?';
+        $insertQuery = 'INSERT INTO `' . self::$attribute2OxidTable . '` (`OXID`, `OXSHOPID`, `ESATTRIBUTE`, `OXOBJECT`,  `OXTYPE`) VALUES (?, ?, ?, ?, ?)';
 
-        foreach ($aAttributes2Oxid as $aAttribute2Oxid) {
-            if (!\OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSqlCheck, [$aAttribute2Oxid['eightselectAttribute'], $oUtils->getShopId()])) {
-                \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->execute($sSqlInsert, [$oUtils->generateUId(), $oUtils->getShopId(), $aAttribute2Oxid['eightselectAttribute'], $aAttribute2Oxid['oxidObject'], $aAttribute2Oxid['type']]);
+        foreach ($attributes2Oxid as $attribute2Oxid) {
+            if (!DatabaseProvider::getDb()->getOne($checkQuery, [$attribute2Oxid['eightselectAttribute'], $shopId])) {
+                DatabaseProvider::getDb()->execute($insertQuery, [$utilsObject->generateUId(), $shopId, $attribute2Oxid['eightselectAttribute'], $attribute2Oxid['oxidObject'], $attribute2Oxid['type']]);
             }
         }
     }
@@ -163,19 +176,19 @@ class Events
     /**
      * Clear smarty cache
      */
-    private static function _clearSmartyCache()
+    protected static function _clearSmartyCache()
     {
-        $oUtilsView = oxNew(\OxidEsales\Eshop\Core\UtilsView::class);
-        $sSmartyDir = $oUtilsView->getSmartyDir();
+        $utilsView = oxNew(\OxidEsales\Eshop\Core\UtilsView::class);
+        $smartyDir = $utilsView->getSmartyDir();
 
-        if ($sSmartyDir && is_readable($sSmartyDir)) {
-            foreach (glob($sSmartyDir . '*') as $sFile) {
-                if (!is_dir($sFile)) {
-                    @unlink($sFile);
+        if ($smartyDir && is_readable($smartyDir)) {
+            foreach (glob($smartyDir . '*') as $file) {
+                if (!is_dir($file)) {
+                    @unlink($file);
                 }
             }
         }
 
-        \OxidEsales\Eshop\Core\Registry::getUtils()->oxResetFileCache();
+        Registry::getUtils()->oxResetFileCache();
     }
 }

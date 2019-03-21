@@ -2,6 +2,8 @@
 
 namespace ASign\EightSelect\Component;
 
+use OxidEsales\Eshop\Core\Registry;
+
 /**
  * Class MiniBasket
  * @package ASign\EightSelect\Component
@@ -13,9 +15,8 @@ class MiniBasket extends MiniBasket_parent
      */
     public function getBasketItemsCount()
     {
-        $oSession = \OxidEsales\Eshop\Core\Registry::getSession();
-        $oBasket = $oSession->getBasket();
+        $basket = Registry::getSession()->getBasket();
 
-        \OxidEsales\Eshop\Core\Registry::getUtils()->showMessageAndExit($oBasket->getItemsCount());
+        Registry::getUtils()->showMessageAndExit($basket->getItemsCount());
     }
 }

@@ -2,13 +2,17 @@
 
 namespace ASign\EightSelect\Model\Export;
 
+use ASign\EightSelect\Model\Attribute2Oxid;
+use OxidEsales\Eshop\Core\Model\ListModel;
+
 /**
  * Class ExportDynamic
  * @package ASign\EightSelect\Model\Export
  */
 class ExportDynamic extends ExportAbstract
 {
-    private $_aConvertHtml = [
+    /** @var array */
+    protected $_convertHtml = [
         'beschreibung'  => '_removeNewLines',
         'beschreibung1' => '_removeNewLinesAndHtml',
     ];
@@ -21,140 +25,151 @@ class ExportDynamic extends ExportAbstract
     protected $_sClassName = 'ExportDynamic';
 
     /**
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+     * Runs export
      */
     public function run()
     {
-        /** @var oxList $oEightSelectAttr2oxidList */
-        $oEightSelectAttr2oxidList = oxNew(\OxidEsales\Eshop\Core\Model\ListModel::class);
-        $oEightSelectAttr2oxidList->init(\ASign\EightSelect\Model\Attribute2Oxid::class);
+        /** @var ListModel $attribute2oxidList */
+        $attribute2oxidList = oxNew(ListModel::class);
+        $attribute2oxidList->init(Attribute2Oxid::class);
 
-        /** @var oxList $oAttr2oxidList */
-        $oAttr2oxidList = $oEightSelectAttr2oxidList->getList();
-        $aAttr2oxidList = $oAttr2oxidList->getArray();
+        $attribute2oxidList = $attribute2oxidList->getList();
+        $attribute2oxidList = $attribute2oxidList->getArray();
 
-        /** @var EightSelectAttribute2Oxid $oAttr2oxid */
-        foreach ($aAttr2oxidList as $oAttr2oxid) {
-            $sEightSelectAttribute = $oAttr2oxid->eightselect_attribute2oxid__esattribute->value;
+        /** @var Attribute2Oxid $attribute2oxid */
+        foreach ($attribute2oxidList as $attribute2oxid) {
+            $attribute = $attribute2oxid->getFieldData('esattribute');
 
-            if (array_key_exists($sEightSelectAttribute, $this->_aCsvAttributes)) {
-                $sType = $oAttr2oxid->eightselect_attribute2oxid__oxtype->value;
+            if (array_key_exists($attribute, $this->_aCsvAttributes)) {
+                $type = $attribute2oxid->getFieldData('oxtype');
 
-                if ($sType === 'oxarticlesfield') {
-                    $this->_processArticlesField($oAttr2oxid);
-                } elseif ($sType === 'oxartextendsfield') {
-                    $this->_processArtExtendsField($oAttr2oxid);
-                } elseif ($sType === 'oxattributeid') {
-                    $this->_processAttribute($oAttr2oxid);
-                } elseif ($sType === 'oxvarselect') {
-                    $this->_processVarSelect($oAttr2oxid);
+                if ($type === 'oxarticlesfield') {
+                    $this->_processArticlesField($attribute2oxid);
+                } elseif ($type === 'oxartextendsfield') {
+                    $this->_processArtExtendsField($attribute2oxid);
+                } elseif ($type === 'oxattributeid') {
+                    $this->_processAttribute($attribute2oxid);
+                } elseif ($type === 'oxvarselect') {
+                    $this->_processVarSelect($attribute2oxid);
                 }
             }
         }
     }
 
     /**
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
+     * Processes article field
+     *
+     * @param Attribute2Oxid $attribute2oxid
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _processArticlesField(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid)
+    protected function _processArticlesField(Attribute2Oxid $attribute2oxid)
     {
-        $sTable = getViewName('oxarticles');
-        $sArticleField = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $table = getViewName('oxarticles');
+        $articleField = $attribute2oxid->getFieldData('oxobject');
 
-        $sSql = "SELECT {$sArticleField} FROM {$sTable} WHERE OXID = ?";
-        $sValue = (string)\OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, [$this->_oArticle->getId()]);
+        $query = "SELECT {$articleField} FROM {$table} WHERE OXID = ?";
+        $value = (string) \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($query, [$this->_oArticle->getId()]);
 
-        $sValue = $this->_convertHtml($sValue, $oAttr2oxid->eightselect_attribute2oxid__esattribute->value);
-        $this->_aCsvAttributes[$oAttr2oxid->eightselect_attribute2oxid__esattribute->value] = $sValue;
+        $name = $attribute2oxid->getFieldData('esattribute');
+        $this->_aCsvAttributes[$name] = $this->_convertHtml($value, $name);
     }
 
     /**
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
+     * Processes article extended field
+     *
+     * @param Attribute2Oxid $attribute2oxid
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _processArtExtendsField(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid)
+    protected function _processArtExtendsField(Attribute2Oxid $attribute2oxid)
     {
-        $sTable = getViewName('oxartextends');
-        $sArtExtendsField = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $table = getViewName('oxartextends');
+        $artExtendsField = $attribute2oxid->getFieldData('oxobject');
 
-        $sSql = "SELECT {$sArtExtendsField} FROM {$sTable} WHERE OXID = ?";
-        $sValue = (string)\OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, [$this->_oArticle->getId()]);
+        $query = "SELECT {$artExtendsField} FROM {$table} WHERE OXID = ?";
+        $value = (string) \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($query, [$this->_oArticle->getId()]);
 
-        $sValue = $this->_convertHtml($sValue, $oAttr2oxid->eightselect_attribute2oxid__esattribute->value);
-        $this->_aCsvAttributes[$oAttr2oxid->eightselect_attribute2oxid__esattribute->value] = $sValue;
+        $name = $attribute2oxid->getFieldData('esattribute');
+        $this->_aCsvAttributes[$name] = $this->_convertHtml($value, $name);
     }
 
     /**
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
+     * Processes attribute field
+     *
+     * @param Attribute2Oxid $attribute2oxid
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    private function _processAttribute(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid)
+    protected function _processAttribute(Attribute2Oxid $attribute2oxid)
     {
-        $sAttributeTable = getViewName('oxattribute');
-        $sO2ATable = getViewName('oxobject2attribute');
-        $sAttributeId = $oAttr2oxid->eightselect_attribute2oxid__oxobject->value;
+        $attributeTable = getViewName('oxattribute');
+        $object2AttributeTable = getViewName('oxobject2attribute');
+        $attributeId = $attribute2oxid->getFieldData('oxobject');
 
-        $sSql = "SELECT o2a.OXVALUE
-                  FROM {$sAttributeTable} AS oxattribute
-                  JOIN {$sO2ATable} AS o2a ON oxattribute.OXID = o2a.OXATTRID
+        $query = "SELECT o2a.OXVALUE
+                  FROM {$attributeTable} AS oxattribute
+                  JOIN {$object2AttributeTable} AS o2a ON oxattribute.OXID = o2a.OXATTRID
                   WHERE oxattribute.OXID = ?
                     AND o2a.OXOBJECTID = ?";
-        $sValue = (string)\OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($sSql, [$sAttributeId, $this->_oArticle->getId()]);
+        $value = (string) \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getOne($query, [$attributeId, $this->_oArticle->getId()]);
 
-        $sValue = $this->_convertHtml($sValue, $oAttr2oxid->eightselect_attribute2oxid__esattribute->value);
-        $this->_aCsvAttributes[$oAttr2oxid->eightselect_attribute2oxid__esattribute->value] = $sValue;
+        $name = $attribute2oxid->getFieldData('esattribute');
+        $this->_aCsvAttributes[$name] = $this->_convertHtml($value, $name);
     }
 
     /**
-     * @param \ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid
+     * Processes varselect
+     *
+     * @param Attribute2Oxid $attribute2oxid
      */
-    private function _processVarSelect(\ASign\EightSelect\Model\Attribute2Oxid $oAttr2oxid)
+    protected function _processVarSelect(Attribute2Oxid $attribute2oxid)
     {
-        $sEightSelectAttribute = $oAttr2oxid->eightselect_attribute2oxid__esattribute->value;
-        $this->_aCsvAttributes[$sEightSelectAttribute] = $this->getVariantSelection($sEightSelectAttribute);
+        $attribute = $attribute2oxid->getFieldData('esattribute');
+        $this->_aCsvAttributes[$attribute] = $this->getVariantSelection($attribute);
     }
 
     /**
      * Convert HTML content
      *
-     * @param string $sValue
-     * @param string $sEightSelectAttributeName
+     * @param string $value
+     * @param string $attributeName
      * @return string $sValue
      */
-    private function _convertHtml($sValue, $sEightSelectAttributeName)
+    protected function _convertHtml($value, $attributeName)
     {
-        if (empty($sValue)) {
-            return $sValue;
+        if (empty($value)) {
+            return $value;
         }
 
-        if (array_key_exists($sEightSelectAttributeName, $this->_aConvertHtml) && method_exists($this, $sFunc = $this->_aConvertHtml[$sEightSelectAttributeName])) {
-            $sValue = $this->$sFunc($sValue);
+        if (array_key_exists($attributeName, $this->_convertHtml) && method_exists($this, $function = $this->_convertHtml[$attributeName])) {
+            $value = $this->$function($value);
         }
 
-        return $sValue;
+        return $value;
     }
 
     /**
-     * @param $sValue
-     * @return mixed
-     */
-    private function _removeNewLines($sValue)
-    {
-        return str_replace(["\r\n", "\r", "\n"], ' ', $sValue);
-    }
-
-    /**
-     * @param $sValue
+     * Removes newlines from given text
+     *
+     * @param string $value
      * @return string
      */
-    private function _removeNewLinesAndHtml($sValue)
+    protected function _removeNewLines($value)
     {
-        $sWithOutNewLines = str_replace(["\r\n", "\r", "\n"], '<br>', $sValue);
-        $sWithExtraSpaces = str_replace(">", '> ', $sWithOutNewLines);
-        $sWithOutHtml = strip_tags($sWithExtraSpaces);
-        $sWithOutHtmlEntities = html_entity_decode($sWithOutHtml);
+        return str_replace(["\r\n", "\r", "\n"], ' ', $value);
+    }
 
-        return trim(preg_replace('/[\h\xa0\xc2]+/', ' ', $sWithOutHtmlEntities));
+    /**
+     * Removes newlines and HTML from given text
+     *
+     * @param string $value
+     * @return string
+     */
+    protected function _removeNewLinesAndHtml($value)
+    {
+        $withOutNewLines = str_replace(["\r\n", "\r", "\n"], '<br>', $value);
+        $withExtraSpaces = str_replace(">", '> ', $withOutNewLines);
+        $withOutHtml = strip_tags($withExtraSpaces);
+        $withOutHtmlEntities = html_entity_decode($withOutHtml);
+
+        return trim(preg_replace('/[\h\xa0\xc2]+/', ' ', $withOutHtmlEntities));
     }
 }

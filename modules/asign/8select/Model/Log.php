@@ -2,19 +2,19 @@
 
 namespace ASign\EightSelect\Model;
 
-use OxidEsales\Eshop\Core\Field;
+use OxidEsales\Eshop\Core\Model\BaseModel;
 
 /**
  * Class Log
  * @package ASign\EightSelect\Model
  */
-class Log extends \OxidEsales\Eshop\Core\Model\BaseModel
+class Log extends BaseModel
 {
     /** @var string */
-    public static $ACTION_EXPORT_FULL = 'Export Full';
+    const ACTION_EXPORT_FULL = 'Export Full';
 
     /** @var string */
-    public static $ACTION_EXPORT_UPD = 'Export Update';
+    const ACTION_EXPORT_UPD = 'Export Update';
 
     /**
      * Current class name
@@ -36,28 +36,28 @@ class Log extends \OxidEsales\Eshop\Core\Model\BaseModel
     protected $_blFullExport = null;
 
     /**
-     * @param $sAction
-     * @param $sMessage
+     * @param string $action
+     * @param string $message
      * @throws \Exception
      */
-    public function addLog($sAction, $sMessage)
+    public function addLog($action, $message)
     {
         $this->init();
-        $this->_setAction($sAction);
-        $this->_setMessage($sMessage);
+        $this->_setAction($action);
+        $this->_setMessage($message);
         $this->_setDate();
         $this->save();
     }
 
     /**
-     * @param $blFull
+     * @param bool $full
      * @throws \Exception
      */
-    public function startExport($blFull)
+    public function startExport($full)
     {
         $this->init();
-        $this->_blFullExport = (bool)$blFull;
-        $this->_setAction($blFull ? self::$ACTION_EXPORT_FULL : self::$ACTION_EXPORT_UPD);
+        $this->_blFullExport = (bool) $full;
+        $this->_setAction($full ? self::ACTION_EXPORT_FULL : self::ACTION_EXPORT_UPD);
         $this->_setMessage('Start export');
         $this->save();
     }
@@ -73,68 +73,68 @@ class Log extends \OxidEsales\Eshop\Core\Model\BaseModel
     }
 
     /**
-     * @param $sMessage
+     * @param string $message
      * @throws \Exception
      */
-    public function errorExport($sMessage)
+    public function errorExport($message)
     {
-        $this->_setMessage("Export error\n{$sMessage}");
+        $this->_setMessage("Export error\n{$message}");
         $this->save();
     }
 
     /**
-     * @param bool $blFull
+     * @param bool $full
      * @return mixed
      */
-    public function getLastSuccessExportDate($blFull)
+    public function getLastSuccessExportDate($full)
     {
-        $iShopId = $this->getConfig()->getShopId();
-        $sVarName = 'sExportDate' . ($blFull ? 'Full' : 'Update');
+        $shopId = $this->getConfig()->getShopId();
+        $varName = 'sExportDate' . ($full ? 'Full' : 'Update');
 
-        return $this->getConfig()->getShopConfVar($sVarName, $iShopId, 'module:asign_8select');
+        return $this->getConfig()->getShopConfVar($varName, $shopId, 'module:asign_8select');
     }
 
     /**
-     * @param bool $blFull
-     * @param string $sDateTime
+     * @param bool   $full
+     * @param string $dateTime
      */
-    public function setLastSuccessExportDate($blFull, $sDateTime = null)
+    public function setLastSuccessExportDate($full, $dateTime = null)
     {
-        if ($sDateTime === null) {
-            $sDateTime = date('Y-m-d H:i:s');
+        if ($dateTime === null) {
+            $dateTime = date('Y-m-d H:i:s');
         }
 
-        $iShopId = $this->getConfig()->getShopId();
-        $sVarName = 'sExportDate' . ($blFull ? 'Full' : 'Update');
+        $shopId = $this->getConfig()->getShopId();
+        $varName = 'sExportDate' . ($full ? 'Full' : 'Update');
 
-        $this->getConfig()->saveShopConfVar('str', $sVarName, $sDateTime, $iShopId, 'module:asign_8select');
+        $this->getConfig()->saveShopConfVar('str', $varName, $dateTime, $shopId, 'module:asign_8select');
     }
 
     /**
      * Set an action name
      *
-     * @param string $sActionName
+     * @param string $actionName
      */
-    private function _setAction($sActionName)
+    protected function _setAction($actionName)
     {
-        $this->eightselect_log__eightselect_action = new Field($sActionName);
+        $this->assign(['eightselect_action' => $actionName]);
     }
 
     /**
      * Set a message
      *
-     * @param string $sMessage
+     * @param string $message
      */
-    private function _setMessage($sMessage)
+    protected function _setMessage($message)
     {
-        $this->eightselect_log__eightselect_message = new Field($sMessage);
+        $this->assign(['eightselect_message' => $message]);
     }
 
     /**
      * Set to current datetime
      */
-    private function _setDate()
+    protected function _setDate()
     {
-        $this->eightselect_log__eightselect_date = new Field(date('Y-m-d H:i:s'));
+        $this->assign(['eightselect_date' => date('Y-m-d H:i:s')]);
     }
 }
