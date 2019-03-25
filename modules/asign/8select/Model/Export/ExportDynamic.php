@@ -4,6 +4,8 @@ namespace ASign\EightSelect\Model\Export;
 
 use ASign\EightSelect\Model\Attribute2Oxid;
 use OxidEsales\Eshop\Core\Model\ListModel;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\TableViewNameGenerator;
 
 /**
  * Class ExportDynamic
@@ -64,7 +66,7 @@ class ExportDynamic extends ExportAbstract
      */
     protected function _processArticlesField(Attribute2Oxid $attribute2oxid)
     {
-        $table = getViewName('oxarticles');
+        $table = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
         $articleField = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT {$articleField} FROM {$table} WHERE OXID = ?";
@@ -82,7 +84,7 @@ class ExportDynamic extends ExportAbstract
      */
     protected function _processArtExtendsField(Attribute2Oxid $attribute2oxid)
     {
-        $table = getViewName('oxartextends');
+        $table = Registry::get(TableViewNameGenerator::class)->getViewName('oxartextends');
         $artExtendsField = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT {$artExtendsField} FROM {$table} WHERE OXID = ?";
@@ -100,8 +102,8 @@ class ExportDynamic extends ExportAbstract
      */
     protected function _processAttribute(Attribute2Oxid $attribute2oxid)
     {
-        $attributeTable = getViewName('oxattribute');
-        $object2AttributeTable = getViewName('oxobject2attribute');
+        $attributeTable = Registry::get(TableViewNameGenerator::class)->getViewName('oxattribute');
+        $object2AttributeTable = Registry::get(TableViewNameGenerator::class)->getViewName('oxobject2attribute');
         $attributeId = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT o2a.OXVALUE

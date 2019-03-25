@@ -9,6 +9,7 @@ use OxidEsales\Eshop\Application\Model\Article;
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\Eshop\Core\Request;
+use OxidEsales\Eshop\Core\TableViewNameGenerator;
 
 /**
  * Class AdminExportDo
@@ -172,7 +173,7 @@ class AdminExportDo extends DynamicExportBaseController
         $article = oxNew(Article::class);
         $article->setLanguage($exportLang);
 
-        $articleTable = getViewName("oxarticles", $exportLang);
+        $articleTable = Registry::get(TableViewNameGenerator::class)->getViewName("oxarticles", $exportLang);
 
         $select = "INSERT INTO {$heapTable} ";
         $select .= "SELECT oxarticles.OXID FROM {$articleTable} as oxarticles ";
@@ -197,7 +198,6 @@ class AdminExportDo extends DynamicExportBaseController
         }
 
         $select .= "GROUP BY oxarticles.OXID ORDER BY oxarticles.OXARTNUM ASC";
-        file_put_contents(OX_BASE_PATH . 'log/0mzwack.log', date('[Y-m-d H:i:s] ') . __METHOD__ . ' '.$select . PHP_EOL, 8);
 
         return $db->execute($select) ? true : false;
     }

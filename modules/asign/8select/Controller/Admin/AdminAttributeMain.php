@@ -9,6 +9,7 @@ use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\Model\ListModel;
 use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\Eshop\Core\Request;
+use OxidEsales\Eshop\Core\TableViewNameGenerator;
 
 /**
  * Class AdminAttributeMain
@@ -83,7 +84,7 @@ class AdminAttributeMain extends AdminDetailsController
         }
 
         // Dynamic attributes
-        $tableName = getViewName('oxattribute');
+        $tableName = Registry::get(TableViewNameGenerator::class)->getViewName('oxattribute');
         $attributes = DatabaseProvider::getDb(DatabaseProvider::FETCH_MODE_NUM)->getAll("SELECT CONCAT('oxattributeid;', OXID), OXTITLE FROM {$tableName}");
         $optGroupAttribute = $lang->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ATTRIBUTE');
 
@@ -92,7 +93,7 @@ class AdminAttributeMain extends AdminDetailsController
         }
 
         // Dynamic variant selections
-        $tableName = getViewName('oxarticles');
+        $tableName = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
         $varSelects = DatabaseProvider::getDb(DatabaseProvider::FETCH_MODE_NUM)->getCol("SELECT DISTINCT OXVARNAME FROM {$tableName} WHERE OXVARNAME != ''");
         $optGroupVarSelect = $lang->translateString('EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_VARSELECT');
 

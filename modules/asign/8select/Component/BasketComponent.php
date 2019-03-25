@@ -7,6 +7,7 @@ use OxidEsales\Eshop\Application\Model\Article;
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\Eshop\Core\Request;
+use OxidEsales\Eshop\Core\TableViewNameGenerator;
 
 /**
  * Class BasketComponent
@@ -83,7 +84,7 @@ class BasketComponent extends BasketComponent_parent
      */
     protected function _loadByArticlesField(Attribute2Oxid $attribute2oxid, $sku)
     {
-        $view = getViewName('oxarticles');
+        $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
         $articleField = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT OXID FROM {$view} WHERE {$articleField} = ?";
@@ -101,7 +102,7 @@ class BasketComponent extends BasketComponent_parent
      */
     protected function _loadByArtExtendsField(Attribute2Oxid $attribute2oxid, $sku)
     {
-        $view = getViewName('oxartextends');
+        $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxartextends');
         $artExtendsField = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT OXID FROM {$view} WHERE {$artExtendsField} = ?";
@@ -119,8 +120,8 @@ class BasketComponent extends BasketComponent_parent
      */
     protected function _loadByAttribute(Attribute2Oxid $attribute2oxid, $sku)
     {
-        $attributeTable = getViewName('oxattribute');
-        $object2AttributeTable = getViewName('oxobject2attribute');
+        $attributeTable = Registry::get(TableViewNameGenerator::class)->getViewName('oxattribute');
+        $object2AttributeTable = Registry::get(TableViewNameGenerator::class)->getViewName('oxobject2attribute');
         $attributeId = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT o2a.OXOBJECTID
@@ -141,7 +142,7 @@ class BasketComponent extends BasketComponent_parent
      */
     protected function _loadByVarSelect($sku)
     {
-        $view = getViewName('oxarticles');
+        $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
 
         $query = "SELECT OXID FROM {$view} WHERE OXVARSELECT LIKE ?";
 

@@ -7,6 +7,8 @@ use ASign\EightSelect\Model\Export;
 use OxidEsales\Eshop\Application\Model\Article;
 use OxidEsales\Eshop\Core\Model\BaseModel;
 use OxidEsales\Eshop\Core\Model\ListModel;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\TableViewNameGenerator;
 
 /**
  * Class ExportAbstract
@@ -88,7 +90,7 @@ abstract class ExportAbstract extends BaseModel
             return '';
         }
 
-        $table = getViewName('eightselect_attribute2oxid');
+        $table = Registry::get(TableViewNameGenerator::class)->getViewName('eightselect_attribute2oxid');
 
         $list = oxNew(ListModel::class);
         $list->init(Attribute2Oxid::class);
