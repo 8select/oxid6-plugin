@@ -4,6 +4,7 @@ namespace ASign\EightSelect\Model;
 
 use OxidEsales\Eshop\Application\Controller\ArticleDetailsController;
 use OxidEsales\Eshop\Application\Model\SelectList;
+use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\EshopCommunity\Application\Model\Selection;
 
 /**
@@ -69,8 +70,10 @@ class Article extends Article_parent
     protected function getEightSelectColorLabels()
     {
         if ($this->_colorLabels === null) {
-            $query = "SELECT OXOBJECT FROM eightselect_attribute2oxid WHERE ESATTRIBUTE = 'farbe'";
-            $this->_colorLabels = (array) \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->getCol($query);
+            $colorField = Registry::getConfig()->getConfigParam('SHOP_MODULE_sArticleColorField');
+            list(, $colorLabel) = explode(';', $colorField);
+
+            $this->_colorLabels = [$colorLabel];
         }
 
         return $this->_colorLabels;

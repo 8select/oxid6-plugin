@@ -11,6 +11,7 @@ use OxidEsales\Eshop\Core\TableViewNameGenerator;
 
 /**
  * Class BasketComponent
+ *
  * @package ASign\EightSelect\Component
  */
 class BasketComponent extends BasketComponent_parent
@@ -48,24 +49,18 @@ class BasketComponent extends BasketComponent_parent
      */
     protected function _loadArticleWithSKU($sku)
     {
-        /** @var Attribute2Oxid $attribute2oxid */
-        $attribute2oxid = oxNew(Attribute2Oxid::class);
-
-        $viewName = $attribute2oxid->getViewName();
-        $query = "SELECT * FROM {$viewName} WHERE {$viewName}.ESATTRIBUTE = 'sku'";
-        $loaded = $attribute2oxid->assignRecord($query);
+        $skuField = Registry::getConfig()->getConfigParam('sArticleSkuField');
+        list($type, $field) = explode(';', $skuField);
 
         $article = oxNew(Article::class);
 
-        if ($loaded) {
-            $type = $attribute2oxid->getFieldData('oxtype');
-
-            if ($type === 'oxarticlesfield') {
-                $article->load($this->_loadByArticlesField($attribute2oxid, $sku));
-            } elseif ($type === 'oxartextendsfield') {
-                $article->load($this->_loadByArtExtendsField($attribute2oxid, $sku));
-            } elseif ($type === 'oxattributeid') {
-                $article->load($this->_loadByAttribute($attribute2oxid, $sku));
+        if ($type && $field) {
+            if ($type === 'oxarticles') {
+                $article->load($this->_loadByArticlesField($field, $sku));
+            } elseif ($type === 'oxartextends') {
+                $article->load($this->_loadByArtExtendsField($field, $sku));
+            } elseif ($type === 'oxattribute') {
+                $article->load($this->_loadByAttribute($field, $sku));
             } elseif ($type === 'oxvarselect') {
                 $article->load($this->_loadByVarSelect($sku));
             }
@@ -77,16 +72,14 @@ class BasketComponent extends BasketComponent_parent
     /**
      * Load by articles field
      *
-     * @param Attribute2Oxid $attribute2oxid
-     * @param string         $sku
+     * @param        $articleField
+     * @param string $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    protected function _loadByArticlesField(Attribute2Oxid $attribute2oxid, $sku)
+    protected function _loadByArticlesField($articleField, $sku)
     {
         $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
-        $articleField = $attribute2oxid->getFieldData('oxobject');
-
         $query = "SELECT OXID FROM {$view} WHERE {$articleField} = ?";
 
         return DatabaseProvider::getDb()->getOne($query, [$sku]);
@@ -95,16 +88,14 @@ class BasketComponent extends BasketComponent_parent
     /**
      * Load by art extends field
      *
-     * @param Attribute2Oxid $attribute2oxid
-     * @param string         $sku
+     * @param        $artExtendsField
+     * @param string $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    protected function _loadByArtExtendsField(Attribute2Oxid $attribute2oxid, $sku)
+    protected function _loadByArtExtendsField($artExtendsField, $sku)
     {
         $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxartextends');
-        $artExtendsField = $attribute2oxid->getFieldData('oxobject');
-
         $query = "SELECT OXID FROM {$view} WHERE {$artExtendsField} = ?";
 
         return DatabaseProvider::getDb()->getOne($query, [$sku]);
@@ -113,22 +104,20 @@ class BasketComponent extends BasketComponent_parent
     /**
      * Load by attribute
      *
-     * @param Attribute2Oxid $attribute2oxid
-     * @param string         $sku
+     * @param        $attributeId
+     * @param string $sku
      * @return false|string
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    protected function _loadByAttribute(Attribute2Oxid $attribute2oxid, $sku)
+    protected function _loadByAttribute($attributeId, $sku)
     {
         $attributeTable = Registry::get(TableViewNameGenerator::class)->getViewName('oxattribute');
         $object2AttributeTable = Registry::get(TableViewNameGenerator::class)->getViewName('oxobject2attribute');
-        $attributeId = $attribute2oxid->getFieldData('oxobject');
 
         $query = "SELECT o2a.OXOBJECTID
                   FROM {$attributeTable} AS oxattribute
                   JOIN {$object2AttributeTable} AS o2a ON oxattribute.OXID = o2a.OXATTRID
-                  WHERE oxattribute.OXID = ?
-                    AND o2a.OXVALUE = ?";
+                  WHERE oxattribute.OXID = ? AND o2a.OXVALUE = ?";
 
         return DatabaseProvider::getDb()->getOne($query, [$attributeId, $sku]);
     }
@@ -143,7 +132,6 @@ class BasketComponent extends BasketComponent_parent
     protected function _loadByVarSelect($sku)
     {
         $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
-
         $query = "SELECT OXID FROM {$view} WHERE OXVARSELECT LIKE ?";
 
         return DatabaseProvider::getDb()->getOne($query, ['%' . $sku . '%']);

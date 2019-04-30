@@ -3,6 +3,8 @@
 /**
  * Metadata version
  */
+
+
 $sMetadataVersion = '2.0';
 
 /**
@@ -28,7 +30,8 @@ $aModule = [
         \OxidEsales\Eshop\Core\ViewConfig::class                         => ASign\EightSelect\Core\ViewConfig::class,
         \OxidEsales\Eshop\Application\Model\Article::class               => ASign\EightSelect\Model\Article::class,
         \OxidEsales\Eshop\Application\Component\BasketComponent::class   => ASign\EightSelect\Component\BasketComponent::class,
-        \OxidEsales\Eshop\Application\Component\Widget\MiniBasket::class => ASign\EightSelect\Component\MiniBasket::class
+        \OxidEsales\Eshop\Application\Component\Widget\MiniBasket::class => ASign\EightSelect\Component\MiniBasket::class,
+        \OxidEsales\Eshop\Application\Controller\Admin\ModuleConfiguration::class => ASign\EightSelect\Application\Controller\Admin\ModuleConfiguration::class,
     ],
     'controllers' => [
         'EightSelectAPI' => ASign\EightSelect\Controller\EightSelectAPI::class,
@@ -54,6 +57,12 @@ $aModule = [
             'template' => 'page/checkout/thankyou.tpl',
             'block'    => 'checkout_thankyou_main',
             'file'     => '/views/blocks/page/checkout/eightselect_performance-tracking.tpl',
+        ],
+        [
+            'template' => 'module_config.tpl',
+            'block'    => 'admin_module_config_var_type_select',
+            'file'     => '/views/blocks/eightselect_module_config.tpl',
+            'position' => 1,
         ],
     ],
     'settings'    => [
@@ -86,6 +95,18 @@ $aModule = [
             'name'  => 'blEightSelectWidgetSysPsv',
             'type'  => 'bool',
             'value' => 'true',
+        ],
+        [
+            'group' => 'eightselect_widget',
+            'name'  => 'sArticleSkuField',
+            'type'  => 'select',
+            'value' => 'oxarticles;OXARTNUM',
+        ],
+        [
+            'group' => 'eightselect_widget',
+            'name'  => 'sArticleColorField',
+            'type'  => 'select',
+            'value' => 'oxvarselect;Farbe',
         ],
         [
             'group' => 'eightselect_feed',

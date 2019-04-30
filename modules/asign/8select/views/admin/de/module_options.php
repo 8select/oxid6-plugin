@@ -19,6 +19,8 @@ $aLang = [
     'SHOP_MODULE_sEightSelectFeedId'          => 'Feed ID',
     'SHOP_MODULE_blEightSelectWidgetSysPsv'   => 'SYS-PSV (Einbindung z.B. in eine Artikel-Detailseite)',
     'SHOP_MODULE_sEightSelectExportNrOfFeeds' => 'Behalte x Feeds im Export-Verzeichnis (0 = keine; nach Upload direkt löschen)',
+    'SHOP_MODULE_sArticleSkuField'            => 'Artikel SKU Feld',
+    'SHOP_MODULE_sArticleColorField'          => 'Farb-Feld',
 
     'mx_eightselect_admin_title'     => '8select Module',
     'mx_eightselect_admin_common'    => '8select CSE',
