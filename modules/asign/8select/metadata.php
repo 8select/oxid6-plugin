@@ -31,24 +31,13 @@ $aModule = [
         \OxidEsales\Eshop\Application\Component\Widget\MiniBasket::class => ASign\EightSelect\Component\MiniBasket::class
     ],
     'controllers' => [
-        'AdminAttribute'     => ASign\EightSelect\Controller\Admin\AdminAttribute::class,
-        'AdminAttributeMain' => ASign\EightSelect\Controller\Admin\AdminAttributeMain::class,
-        'AdminExport'        => ASign\EightSelect\Controller\Admin\AdminExport::class,
-        'AdminExportDo'      => ASign\EightSelect\Controller\Admin\AdminExportDo::class,
-        'AdminExportMain'    => ASign\EightSelect\Controller\Admin\AdminExportMain::class,
-        'AdminExportUpload'  => ASign\EightSelect\Controller\Admin\AdminExportUpload::class
+        'EightSelectAPI' => ASign\EightSelect\Controller\EightSelectAPI::class,
     ],
     'events'      => [
         'onActivate'   => 'ASign\EightSelect\Core\Events::onActivate',
         'onDeactivate' => 'ASign\EightSelect\Core\Events::onDeactivate'
     ],
     'templates'   => [
-        'eightselect_admin_attribute.tpl'      => 'asign/8select/views/admin/tpl/eightselect_admin_attribute.tpl',
-        'eightselect_admin_attribute_main.tpl' => 'asign/8select/views/admin/tpl/eightselect_admin_attribute_main.tpl',
-        'eightselect_admin_export.tpl'         => 'asign/8select/views/admin/tpl/eightselect_admin_export.tpl',
-        'eightselect_admin_export_do.tpl'      => 'asign/8select/views/admin/tpl/eightselect_admin_export_do.tpl',
-        'eightselect_admin_export_main.tpl'    => 'asign/8select/views/admin/tpl/eightselect_admin_export_main.tpl',
-        'eightselect_admin_export_upload.tpl'  => 'asign/8select/views/admin/tpl/eightselect_admin_export_upload.tpl',
     ],
     'blocks'      => [
         [

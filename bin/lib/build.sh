@@ -13,8 +13,6 @@ echo "=========================="
 echo "BUILDING"
 echo "VERSION: ${VERSION}"
 echo "PROFILE: ${PROFILE}"
-echo "S3_ACCESS_KEY: ${S3_ACCESS_KEY}"
-echo "S3_ACCESS_KEY_SECRET: ${S3_ACCESS_KEY_SECRET}"
 echo "=========================="
 
 echo "Build at ${BUILD_DIR}"
@@ -29,16 +27,10 @@ rm -rf .git*
 sed -i '' "s@__VERSION__@${VERSION}@g" modules/asign/8select/metadata.php
 
 TPL_PATH="modules/asign/8select/application/views/blocks/base_style.tpl"
-UPLOADER_PATH="modules/asign/8select/Model/Aws.php"
 
 if [ ${PROFILE} == 'production' ]
 then
-  sed -i '' "s@__SUBDOMAIN__@productfeed@g" ${UPLOADER_PATH}
   sed -i '' "s@__SUBDOMAIN__@wgt@g" ${TPL_PATH}
 else
-  sed -i '' "s@__SUBDOMAIN__@productfeed-prod.${PROFILE}@g" ${UPLOADER_PATH}
   sed -i '' "s@__SUBDOMAIN__@wgt-prod.${PROFILE}@g" ${TPL_PATH}
 fi
-
-sed -i '' "s@__S3_PLUGIN_USER_ACCESS_KEY__@${S3_ACCESS_KEY}@g" ${UPLOADER_PATH}
-sed -i '' "s@__S3_PLUGIN_USER_ACCESS_KEY_SECRET__@${S3_ACCESS_KEY_SECRET}@g" ${UPLOADER_PATH}

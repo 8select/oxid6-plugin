@@ -8,6 +8,7 @@ use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\DbMetaDataHandler;
 use OxidEsales\Eshop\Core\Module\Module;
 use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\Eshop\Core\SeoEncoder;
 use OxidEsales\Eshop\Core\UtilsObject;
 
 /**
@@ -19,7 +20,6 @@ class Events
     /** @var DbMetaDataHandler */
     static protected $metaDataHandler = null;
     static protected $logTable = null;
-    static protected $attribute2OxidTable = null;
 
     /**
      * Execute action on activate event
@@ -28,8 +28,7 @@ class Events
     {
         self::_init();
         self::_addLogTable();
-        self::_addAttribute2OxidTable();
-        self::_addAttributes2Oxid();
+        self::_addEndpointsToSeo();
 
         try {
             /** @var Module $module */
@@ -75,9 +74,6 @@ class Events
 
         $log = oxNew(Log::class);
         self::$logTable = $log->getCoreTableName();
-
-        $attribute2Oxid = oxNew(Attribute2Oxid::class);
-        self::$attribute2OxidTable = $attribute2Oxid->getCoreTableName();
     }
 
     /**
@@ -102,74 +98,29 @@ class Events
     }
 
     /**
-     * Add attribute 2 Oxid table
+     * _addEndpointsToSeo
+     * -----------------------------------------------------------------------------------------------------------------
+     * Add API endpoints to as oxSEO entries
      */
-    protected static function _addAttribute2OxidTable()
+    private static function _addEndpointsToSeo()
     {
-        $tableName = self::$attribute2OxidTable;
-
-        if (!self::$metaDataHandler->tableExists($tableName)) {
-            $query = "CREATE TABLE `{$tableName}` (
-                        `OXID` VARCHAR(32) NOT NULL,
-                        `OXSHOPID` INT(11) NOT NULL,
-                        `ESATTRIBUTE` VARCHAR(32) NOT NULL,
-                        `OXOBJECT` VARCHAR(32) NOT NULL,
-                        `OXTYPE` VARCHAR(32) NOT NULL,
-                        `OXTIMESTAMP` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                        PRIMARY KEY (`OXID`)
-                      ) CHARSET=utf8";
-
-            DatabaseProvider::getDb()->execute($query);
-        }
-    }
-
-    /**
-     * Add attributes 2 oxid
-     *
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
-     */
-    protected static function _addAttributes2Oxid()
-    {
-        $shopId = Registry::getConfig()->getShopId();
-
-        $attributes2Oxid = [
-            [
-                'eightselectAttribute' => 'sku',
-                'oxidObject'           => 'OXARTNUM',
-                'type'                 => 'oxarticlesfield',
-            ],
-            [
-                'eightselectAttribute' => 'beschreibung',
-                'oxidObject'           => 'OXLONGDESC',
-                'type'                 => 'oxartextendsfield',
-            ],
-            [
-                'eightselectAttribute' => 'beschreibung1',
-                'oxidObject'           => 'OXLONGDESC',
-                'type'                 => 'oxartextendsfield',
-            ],
-            [
-                'eightselectAttribute' => 'ean',
-                'oxidObject'           => 'OXEAN',
-                'type'                 => 'oxarticlesfield',
-            ],
-            [
-                'eightselectAttribute' => 'name2',
-                'oxidObject'           => 'OXSHORTDESC',
-                'type'                 => 'oxarticlesfield',
-            ],
+        $baseDir = 'cse-api/';
+        $urls = [
+            'products'           => 'render',
+            'attributes'         => 'renderAttributes',
+            'variant-dimensions' => 'renderVariantDimensions',
         ];
 
-        $utilsObject = oxNew(UtilsObject::class);
+        $shopID = Registry::getConfig()->getShopId();
+        $defaultLang = (int) Registry::getConfig()->getConfigParam('sDefaultLang');
+        $seoEncoder = Registry::get(SeoEncoder::class);
 
-        $checkQuery = 'SELECT 1 FROM `' . self::$attribute2OxidTable . '` WHERE `ESATTRIBUTE` = ? AND OXSHOPID = ?';
-        $insertQuery = 'INSERT INTO `' . self::$attribute2OxidTable . '` (`OXID`, `OXSHOPID`, `ESATTRIBUTE`, `OXOBJECT`,  `OXTYPE`) VALUES (?, ?, ?, ?, ?)';
+        foreach ($urls as $endpoint => $renderFunction) {
+            $stdUrl = "index.php?cl=EightSelectAPI&fnc=$renderFunction";
+            $seoUrl = $baseDir . $endpoint;
+            $oxID = $seoEncoder->getDynamicObjectId($shopID, $stdUrl);
 
-        foreach ($attributes2Oxid as $attribute2Oxid) {
-            if (!DatabaseProvider::getDb()->getOne($checkQuery, [$attribute2Oxid['eightselectAttribute'], $shopId])) {
-                DatabaseProvider::getDb()->execute($insertQuery, [$utilsObject->generateUId(), $shopId, $attribute2Oxid['eightselectAttribute'], $attribute2Oxid['oxidObject'], $attribute2Oxid['type']]);
-            }
+            $seoEncoder->addSeoEntry($oxID, $shopID, $defaultLang, $stdUrl, $seoUrl, 'static', 0);
         }
     }
 

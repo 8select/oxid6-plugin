@@ -9,9 +9,6 @@
     "8select"
   ],
   "homepage": "https://gitlab.com/a-sign/oxid-modules/8select",
-  "require": {
-    "aws/aws-sdk-php": "^3.62"
-  },
   "extra": {
     "oxideshop": {
       "target-directory": "asign/8select"
