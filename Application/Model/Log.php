@@ -1,6 +1,6 @@
 <?php
 
-namespace ASign\EightSelect\Model;
+namespace ASign\EightSelect\Application\Model;
 
 use OxidEsales\Eshop\Core\Model\BaseModel;
 

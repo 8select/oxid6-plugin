@@ -1,6 +1,6 @@
 <?php
 
-namespace ASign\EightSelect\Controller\Admin;
+namespace ASign\EightSelect\Extensions\Application\Controller\Admin;
 
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\Registry;

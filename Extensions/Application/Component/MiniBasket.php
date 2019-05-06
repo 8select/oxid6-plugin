@@ -1,6 +1,6 @@
 <?php
 
-namespace ASign\EightSelect\Component;
+namespace ASign\EightSelect\Extensions\Application\Component;
 
 use OxidEsales\Eshop\Core\Registry;
 

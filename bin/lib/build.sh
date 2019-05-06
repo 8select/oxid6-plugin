@@ -1,6 +1,3 @@
-S3_ACCESS_KEY=$(aws --profile ${PROFILE} --region eu-central-1 cloudformation describe-stacks --stack-name product-feed-service-prod --query 'Stacks[0].Outputs[?OutputKey==`PluginUserAccessKeyId`].OutputValue' --output text)
-S3_ACCESS_KEY_SECRET=$(aws --profile ${PROFILE} --region eu-central-1 cloudformation describe-stacks --stack-name product-feed-service-prod --query 'Stacks[0].Outputs[?OutputKey==`PluginUserAccessKeySecret`].OutputValue' --output text)
-
 PLUGIN_NAME="CseEightselectBasic"
 
 DIST_DIR="dist"
@@ -24,9 +21,9 @@ rm -f bin/release.sh
 rm -rf dist
 rm -rf .git*
 
-sed -i '' "s@__VERSION__@${VERSION}@g" modules/asign/8select/metadata.php
+sed -i '' "s@__VERSION__@${VERSION}@g" metadata.php
 
-TPL_PATH="modules/asign/8select/application/views/blocks/base_style.tpl"
+TPL_PATH="views/blocks/base_style.tpl"
 
 if [ ${PROFILE} == 'production' ]
 then

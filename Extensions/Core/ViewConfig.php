@@ -1,9 +1,9 @@
 <?php
 
-namespace ASign\EightSelect\Core;
+namespace ASign\EightSelect\Extensions\Core;
 
-use OxidEsales\Eshop\Core\Registry;
-use \OxidEsales\EshopCommunity\Core\Request;
+use \OxidEsales\Eshop\Core\Registry;
+use \OxidEsales\Eshop\Core\Request;
 
 /**
  * Class ViewConfig

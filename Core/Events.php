@@ -2,7 +2,7 @@
 
 namespace ASign\EightSelect\Core;
 
-use ASign\EightSelect\Model\Log;
+use ASign\EightSelect\Application\Model\Log;
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\DbMetaDataHandler;
 use OxidEsales\Eshop\Core\Module\Module;

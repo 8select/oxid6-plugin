@@ -1,10 +1,10 @@
 <?php
 
-namespace ASign\EightSelect\Controller;
+namespace ASign\EightSelect\Application\Controller;
 
 use ASign\EightSelect\Core\Attribute;
 use ASign\EightSelect\Core\Export;
-use ASign\EightSelect\Model\Log;
+use ASign\EightSelect\Application\Model\Log;
 use OxidEsales\Eshop\Core\Controller\BaseController;
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\Registry;

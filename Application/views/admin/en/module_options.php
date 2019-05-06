@@ -26,5 +26,9 @@ $aLang = [
     'mx_eightselect_admin_common'    => '8select CSE',
     'mx_eightselect_admin_attribute' => 'Manage attributes',
     'mx_eightselect_admin_export'    => 'Manual export',
-    'mx_eightselect_console'         => '8select CSE - Management Console'
+    'mx_eightselect_console'         => '8select CSE - Management Console',
+
+    'EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ARTICLE'   => 'Product fields',
+    'EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ATTRIBUTE' => 'Attributes',
+    'EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_VARSELECT' => 'Variant names',
 ];

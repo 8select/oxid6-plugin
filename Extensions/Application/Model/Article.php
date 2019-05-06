@@ -1,11 +1,11 @@
 <?php
 
-namespace ASign\EightSelect\Model;
+namespace ASign\EightSelect\Extensions\Application\Model;
 
 use OxidEsales\Eshop\Application\Controller\ArticleDetailsController;
 use OxidEsales\Eshop\Application\Model\SelectList;
+use OxidEsales\Eshop\Application\Model\Selection;
 use OxidEsales\Eshop\Core\Registry;
-use OxidEsales\EshopCommunity\Application\Model\Selection;
 
 /**
  * Class Article
