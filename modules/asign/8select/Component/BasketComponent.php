@@ -2,7 +2,6 @@
 
 namespace ASign\EightSelect\Component;
 
-use ASign\EightSelect\Model\Attribute2Oxid;
 use OxidEsales\Eshop\Application\Model\Article;
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\Registry;

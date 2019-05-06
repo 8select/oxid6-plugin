@@ -31,7 +31,7 @@ $aModule = [
         \OxidEsales\Eshop\Application\Model\Article::class               => ASign\EightSelect\Model\Article::class,
         \OxidEsales\Eshop\Application\Component\BasketComponent::class   => ASign\EightSelect\Component\BasketComponent::class,
         \OxidEsales\Eshop\Application\Component\Widget\MiniBasket::class => ASign\EightSelect\Component\MiniBasket::class,
-        \OxidEsales\Eshop\Application\Controller\Admin\ModuleConfiguration::class => ASign\EightSelect\Application\Controller\Admin\ModuleConfiguration::class,
+        \OxidEsales\Eshop\Application\Controller\Admin\ModuleConfiguration::class => ASign\EightSelect\Controller\Admin\ModuleConfiguration::class,
     ],
     'controllers' => [
         'EightSelectAPI' => ASign\EightSelect\Controller\EightSelectAPI::class,

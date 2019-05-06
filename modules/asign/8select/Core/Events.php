@@ -2,14 +2,12 @@
 
 namespace ASign\EightSelect\Core;
 
-use ASign\EightSelect\Model\Attribute2Oxid;
 use ASign\EightSelect\Model\Log;
 use OxidEsales\Eshop\Core\DatabaseProvider;
 use OxidEsales\Eshop\Core\DbMetaDataHandler;
 use OxidEsales\Eshop\Core\Module\Module;
 use OxidEsales\Eshop\Core\Registry;
 use OxidEsales\Eshop\Core\SeoEncoder;
-use OxidEsales\Eshop\Core\UtilsObject;
 
 /**
  * Class Events

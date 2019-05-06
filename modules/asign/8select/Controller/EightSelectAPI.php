@@ -193,7 +193,7 @@ class EightSelectAPI extends BaseController
         // Merge parent data into variant data
         if ($articleData['OXPARENTID']) {
             $requiredArticleFields = $this->getRequiredArticleFields();
-            $view = getViewName('oxarticles');
+            $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
             $query = "SELECT " . implode(', ', $requiredArticleFields) . " FROM $view WHERE OXID = ?";
             $parentData = DatabaseProvider::getDb(DatabaseProvider::FETCH_MODE_ASSOC)->getRow($query, [$articleData['OXPARENTID']]);
 
