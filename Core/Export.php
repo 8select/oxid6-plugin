@@ -28,11 +28,12 @@ class Export extends Base
     /**
      * Main export method: Calls sub methods to collect all required data
      *
-     * @param array $fields      Fields which should be exported
-     * @param array $articleData Article data (directly from oxarticles table)
+     * @param array $fields         Fields which should be exported
+     * @param array $articleData    Article data (directly from oxarticles table)
+     * @param array $requiredFields Required fields which may not be filtered out
      * @return array
      */
-    public function getExportData($fields, $articleData)
+    public function getExportData($fields, $articleData, $requiredFields)
     {
         $groupedFields = [];
         foreach ($fields as $fieldData) {
@@ -71,10 +72,12 @@ class Export extends Base
                 $this->_buildProductAttributes($articleData, $tableFields, $article);
             }
         }
-        $this->data = array_filter($this->data, function ($field) {
-            return $field['value'] !== '' && $field['value'] !== null;
-        });
+        $this->data = array_filter($this->data, function ($field, $key) use ($requiredFields) {
+            $isEmpty = $field['value'] !== '' && $field['value'] !== null;
+            $isNotRequired = in_array($key, $requiredFields, true);
 
+            return $isEmpty && $isNotRequired;
+        }, ARRAY_FILTER_USE_BOTH);
 
         return $this->data;
     }
@@ -271,6 +274,9 @@ class Export extends Base
 
             } elseif ($field === 'BUYABLE') {
                 $this->data[$fieldData['name']]['value'] = $article->isBuyable() ? 1 : 0;
+            } elseif ($field === 'SKU') {
+                $articleSkuField = $this->getConfig()->getConfigParam('sArticleSkuField');
+                $this->data[$fieldData['name']]['value'] = $article->getFieldData($articleSkuField);
             }
         }
     }

@@ -57,6 +57,7 @@ class Attribute extends Base
         $fields[] = ['name' => 'oxseo.URL', 'label' => 'Article URL',];
         $fields[] = ['name' => 'product.PICTURES', 'label' => 'Article pictures',];
         $fields[] = ['name' => 'product.BUYABLE', 'label' => 'Variant can be ordered',];
+        $fields[] = ['name' => 'product.SKU', 'label' => 'Variant SKU',];
 
         $varNamesQuery = "SELECT DISTINCT OXVARNAME FROM $articleView WHERE OXVARNAME != ''";
         $varNamesResult = DatabaseProvider::getDb()->getCol($varNamesQuery);
