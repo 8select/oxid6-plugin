@@ -3,6 +3,7 @@
 namespace ASign\EightSelect\Application\Model;
 
 use OxidEsales\Eshop\Core\Model\BaseModel;
+use OxidEsales\Eshop\Core\DatabaseProvider;
 
 /**
  * Class Log
@@ -101,7 +102,7 @@ class Log extends BaseModel
     public function setLastSuccessExportDate($full, $dateTime = null)
     {
         if ($dateTime === null) {
-            $dateTime = date('Y-m-d H:i:s');
+            $dateTime = DatabaseProvider::getDb()->getOne('SELECT now()');
         }
 
         $shopId = $this->getConfig()->getShopId();

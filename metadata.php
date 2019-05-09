@@ -99,7 +99,7 @@ $aModule = [
             'group' => 'eightselect_widget',
             'name'  => 'sArticleSkuField',
             'type'  => 'select',
-            'value' => 'oxarticles;OXARTNUM',
+            'value' => 'OXARTNUM',
         ],
         [
             'group' => 'eightselect_widget',

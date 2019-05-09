@@ -134,7 +134,7 @@ class EightSelectAPI extends BaseController
             $log = oxNew(Log::class);
             $dateTime = $log->getLastSuccessExportDate($fullExport);
             if (!$dateTime) {
-                $dateTime = date('Y-m-d H:i:s');
+                $dateTime = DatabaseProvider::getDb()->getOne('SELECT NOW()');
             }
             $dateTime = DatabaseProvider::getDb()->quote($dateTime);
             $where = "WHERE OXTIMESTAMP > $dateTime";
@@ -148,7 +148,6 @@ class EightSelectAPI extends BaseController
             $data[] = $this->buildFullArticleData($article);
         }
 
-        $fullExport = !Registry::get(Request::class)->getRequestEscapedParameter('delta');
         $log = oxNew(Log::class);
         $log->setLastSuccessExportDate($fullExport);
 
@@ -176,6 +175,10 @@ class EightSelectAPI extends BaseController
                 $requiredArticleFields[] = 'OXVENDORID';
             } elseif ($table === 'oxmanufacturers') {
                 $requiredArticleFields[] = 'OXMANUFACTURERID';
+            } elseif ($table === 'product' && $field === 'PICTURES') {
+                for ($i = 1; $i <= 12; $i++) {
+                    $requiredArticleFields[] = 'OXPIC' . $i;
+                }
             }
         }
 

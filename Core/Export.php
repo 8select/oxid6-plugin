@@ -18,6 +18,13 @@ class Export extends Base
     /** @var array */
     protected $data = [];
 
+    /** @var array */
+    protected $priceFields = [
+        'oxprice', 'oxbprice', 'oxtprice', 'oxvarminprice', 'oxvarmaxprice',
+        'oxpricea', 'oxpriceb', 'oxpricec',
+    ];
+
+
     /**
      * Main export method: Calls sub methods to collect all required data
      *
@@ -60,8 +67,14 @@ class Export extends Base
                 $this->_buildVarNameFields($articleData, $tableFields);
             } elseif ($table === 'oxartextends') {
                 $this->_buildArtExtendsAttribute($article, $tableFields);
+            } elseif ($table === 'product') {
+                $this->_buildProductAttributes($articleData, $tableFields, $article);
             }
         }
+        $this->data = array_filter($this->data, function ($field) {
+            return $field['value'] !== '' && $field['value'] !== null;
+        });
+
 
         return $this->data;
     }
@@ -78,12 +91,9 @@ class Export extends Base
     {
         foreach ($tableFields as $fieldData) {
             list(, $field) = explode('.', $fieldData['name']);
-            if (strpos($field, 'OXPIC') === 0 && $articleData[$field]) {
-                if ($parent = $article->getParentArticle()) {
-                    $articleData[$field] = $parent->getPictureUrl(substr($field, 5));
-                } else {
-                    $articleData[$field] = $article->getPictureUrl(substr($field, 5));
-                }
+            if (in_array(strtolower($field), $this->priceFields, true)) {
+                $decimal = pow(10, $this->getConfig()->getActShopCurrencyObject()->decimal);
+                $articleData[$field] *= $decimal;
             }
 
             $this->data[$fieldData['name']] = [
@@ -225,6 +235,44 @@ class Export extends Base
             'label' => $fieldData['label'],
             'value' => $article->getLongDesc(),
         ];
+    }
+
+    /**
+     * _buildProductAttributes
+     * -----------------------------------------------------------------------------------------------------------------
+     * Builds special attributes which didn't really fit elsewhere
+     * BUYABLE and PICTURES are not singular database fields
+     *
+     * @param array   $articleData Article data (directly from oxarticles table)
+     * @param array   $tableFields Article fields which should be exported
+     * @param Article $article     Loaded article
+     */
+    protected function _buildProductAttributes($articleData, $tableFields, $article)
+    {
+        foreach ($tableFields as $fieldData) {
+            list(, $field) = explode('.', $fieldData['name']);
+
+            $this->data[$fieldData['name']] = [
+                'label' => $fieldData['label'],
+                'value' => '',
+            ];
+
+            if ($field === 'PICTURES') {
+                for ($i = 1; $i <= 12; $i++) {
+                    $pictureField = 'OXPIC' . $i;
+                    if ($articleData[$pictureField]) {
+                        if ($parent = $article->getParentArticle()) {
+                            $this->data[$fieldData['name']]['value'][] = $parent->getPictureUrl($i);
+                        } else {
+                            $this->data[$fieldData['name']]['value'][] = $article->getPictureUrl($i);
+                        }
+                    }
+                }
+
+            } elseif ($field === 'BUYABLE') {
+                $this->data[$fieldData['name']]['value'] = $article->isBuyable() ? 1 : 0;
+            }
+        }
     }
 
     /**

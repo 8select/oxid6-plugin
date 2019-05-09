@@ -23,16 +23,14 @@ class Article extends Article_parent
      * Get EightSelect virtual sku
      *
      * @return string
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
     public function getEightSelectVirtualSku()
     {
         if ($this->_virtualMasterSku !== null) {
             return $this->_virtualMasterSku;
         }
-
-        $this->_virtualMasterSku = $this->getFieldData('oxartnum');
+        $skuField = oxRegistry::getConfig()->getConfigParam('sArticleSkuField');
+        $this->_virtualMasterSku = $this->getFieldData($skuField);
 
         $view = $this->getConfig()->getTopActiveView();
         if ($view instanceof ArticleDetailsController) {
@@ -40,7 +38,7 @@ class Article extends Article_parent
 
             if ($varSelections && $varSelections['blPerfectFit'] && $varSelections['oActiveVariant']) {
                 $variant = $varSelections['oActiveVariant'];
-                $this->_virtualMasterSku = $variant->oxarticles__oxartnum->value;
+                $this->_virtualMasterSku = $variant->getFieldData($skuField);
             } elseif (isset($varSelections['selections']) && count($varSelections['selections'])) {
                 $colorLabels = $this->getEightSelectColorLabels();
 
@@ -64,8 +62,6 @@ class Article extends Article_parent
      * Get EightSelect color labels
      *
      * @return array|null
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
     protected function getEightSelectColorLabels()
     {
