@@ -73,10 +73,10 @@ class Export extends Base
             }
         }
         $this->data = array_filter($this->data, function ($field, $key) use ($requiredFields) {
-            $isEmpty = $field['value'] !== '' && $field['value'] !== null;
-            $isNotRequired = in_array($key, $requiredFields, true);
+            $isEmpty = $field['value'] === '' || $field['value'] === null;
+            $isRequired = in_array($key, $requiredFields, true);
 
-            return $isEmpty && $isNotRequired;
+            return !$isEmpty || $isRequired;
         }, ARRAY_FILTER_USE_BOTH);
 
         return $this->data;
@@ -95,8 +95,13 @@ class Export extends Base
         foreach ($tableFields as $fieldData) {
             list(, $field) = explode('.', $fieldData['name']);
             if (in_array(strtolower($field), $this->priceFields, true)) {
-                $decimal = pow(10, $this->getConfig()->getActShopCurrencyObject()->decimal);
-                $articleData[$field] *= $decimal;
+                if ($articleData[$field]) {
+                    $decimal = pow(10, $this->getConfig()->getActShopCurrencyObject()->decimal);
+                    $articleData[$field] *= $decimal;
+                } else {
+                    // Value = 0 or empty: Set to null
+                    $articleData[$field] = null;
+                }
             }
 
             $this->data[$fieldData['name']] = [
