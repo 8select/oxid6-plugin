@@ -36,7 +36,7 @@ class Attribute extends Base
             if (strpos($column, 'OXPIC') === 0) {
                 continue;
             }
-            $fields[] = ['name' => 'oxarticles.' . $column, 'label' => $column];
+            $fields[] = ['name' => 'oxarticles.' . $column, 'label' => Registry::getLang()->translateString($column)];
         }
 
         $attributesView = Registry::get(TableViewNameGenerator::class)->getViewName('oxattribute', $defaultLang);
