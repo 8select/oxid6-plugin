@@ -21,14 +21,14 @@ $aLang = [
     'SHOP_MODULE_sEightSelectExportNrOfFeeds' => 'Behalte x Feeds im Export-Verzeichnis (0 = keine; nach Upload direkt löschen)',
     'SHOP_MODULE_sArticleSkuField'            => 'Artikel SKU Feld',
     'SHOP_MODULE_sArticleColorField'          => 'Farb-Feld',
+    'SHOP_MODULE_sArticleSkuField_'           => 'Diese Einstellungen sind nur möglich, wenn das Modul aktiv ist',
+    'SHOP_MODULE_sArticleColorField_'         => 'Diese Einstellungen sind nur möglich, wenn das Modul aktiv ist',
 
-    'mx_eightselect_admin_title'     => '8select Module',
-    'mx_eightselect_admin_common'    => '8select CSE',
-    'mx_eightselect_admin_attribute' => 'Attribute verwalten',
-    'mx_eightselect_admin_export'    => 'Manueller Export',
-    'mx_eightselect_console'         => '8select CSE - Management Console',
+    'mx_eightselect_admin_title' => '8select CSE',
+    'mx_eightselect_console'     => '8select CSE - Management Console',
 
-    'EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ARTICLE'   => 'Artikel-Felder',
-    'EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_ATTRIBUTE' => 'Attribute',
-    'EIGHTSELECT_ADMIN_ATTRIBUTE_OPTGROUP_VARSELECT' => 'Variantennamen',
+    'mx_eightselect_connect_to_CSE'            => 'Mit CSE verbinden',
+    'mx_eightselect_connection_missing_config' => 'Modul kann nicht mit CSE verbunden werden, da Feed-ID oder API-ID nicht konfiguriert sind.',
+    'mx_eightselect_connection_curl_error'     => 'Verbindung mit CSE war nicht erfolgreich:<br>',
+    'mx_eightselect_connection_success'        => 'Erfolgreich mit CSE verbunden',
 ];

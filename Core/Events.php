@@ -114,7 +114,7 @@ class Events
         $seoEncoder = Registry::get(SeoEncoder::class);
 
         foreach ($urls as $endpoint => $renderFunction) {
-            $stdUrl = "index.php?cl=EightSelectAPI&fnc=$renderFunction";
+            $stdUrl = "index.php?cl=EightSelectAPI&amp;fnc=$renderFunction";
             $seoUrl = $baseDir . $endpoint;
             $oxID = $seoEncoder->getDynamicObjectId($shopID, $stdUrl);
 

@@ -61,7 +61,12 @@ $aModule = [
         [
             'template' => 'module_config.tpl',
             'block'    => 'admin_module_config_var_type_select',
-            'file'     => '/Application/blocks/eightselect_module_config.tpl',
+            'file'     => '/application/views/blocks/eightselect_admin_module_config_var_type_select.tpl',
+        ],
+        [
+            'template' => 'module_config.tpl',
+            'block'    => 'admin_module_config_form',
+            'file'     => '/application/views/blocks/eightselect_admin_module_config_form.tpl',
         ],
     ],
     'settings'    => [
