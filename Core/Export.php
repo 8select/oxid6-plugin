@@ -104,6 +104,11 @@ class Export extends Base
                 }
             }
 
+            // OXPARENTID may never be empty, says 8select
+            if ($field === 'OXPARENTID' && !$articleData[$field]) {
+                $articleData[$field] = $articleData['OXID'];
+            }
+
             $this->data[$fieldData['name']] = [
                 'label' => $fieldData['label'],
                 'value' => $articleData[$field],
