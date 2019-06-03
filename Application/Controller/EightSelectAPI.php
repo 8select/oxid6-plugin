@@ -128,7 +128,7 @@ class EightSelectAPI extends BaseController
         $limit = $this->getLimit();
         $offset = $this->getOffset();
 
-        $fullExport = !Registry::get(Request::class)->getRequestEscapedParameter('delta');
+        $fullExport = !$this->isDeltaExport();
 
         $where = '';
         if (!$fullExport) {
@@ -243,6 +243,27 @@ class EightSelectAPI extends BaseController
         }
 
         return $offset;
+    }
+
+    /**
+     * Checks if the current call is for a full export or a delta export
+     *
+     * @return bool
+     */
+    protected function isDeltaExport()
+    {
+        $isDelta = false;
+
+        $parameter = Registry::get(Request::class)->getRequestEscapedParameter('delta');
+        if ($parameter) {
+            $isDelta = true;
+
+            if ($parameter === 'false') {
+                $isDelta = false;
+            }
+        }
+
+        return $isDelta;
     }
 
     /**

@@ -118,7 +118,11 @@ class Events
             $seoUrl = $baseDir . $endpoint;
             $oxID = $seoEncoder->getDynamicObjectId($shopID, $stdUrl);
 
-            $seoEncoder->addSeoEntry($oxID, $shopID, $defaultLang, $stdUrl, $seoUrl, 'static', 0);
+            file_put_contents(OX_BASE_PATH . 'log/0mzwack.log', date('[Y-m-d H:i:s] ') . __METHOD__ . ' '.$renderFunction . PHP_EOL, 8);
+            if (!$seoEncoder->getStaticUrl($stdUrl, $defaultLang, $shopID)) {
+                file_put_contents(OX_BASE_PATH . 'log/0mzwack.log', date('[Y-m-d H:i:s] ') . __METHOD__ . ' no static' . PHP_EOL, 8);
+                $seoEncoder->addSeoEntry($oxID, $shopID, $defaultLang, $stdUrl, $seoUrl, 'static', 0);
+            }
         }
     }
 
