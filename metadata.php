@@ -61,12 +61,12 @@ $aModule = [
         [
             'template' => 'module_config.tpl',
             'block'    => 'admin_module_config_var_type_select',
-            'file'     => '/application/views/blocks/eightselect_admin_module_config_var_type_select.tpl',
+            'file'     => '/Application/blocks/eightselect_admin_module_config_var_type_select.tpl',
         ],
         [
             'template' => 'module_config.tpl',
             'block'    => 'admin_module_config_form',
-            'file'     => '/application/views/blocks/eightselect_admin_module_config_form.tpl',
+            'file'     => '/Application/blocks/eightselect_admin_module_config_form.tpl',
         ],
     ],
     'settings'    => [
@@ -105,12 +105,6 @@ $aModule = [
             'name'  => 'sArticleSkuField',
             'type'  => 'select',
             'value' => 'OXARTNUM',
-        ],
-        [
-            'group' => 'eightselect_widget',
-            'name'  => 'sArticleColorField',
-            'type'  => 'select',
-            'value' => 'oxvarselect;Farbe',
         ],
         [
             'group' => 'eightselect_feed',

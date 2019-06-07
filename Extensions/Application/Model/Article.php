@@ -14,7 +14,7 @@ use OxidEsales\Eshop\Core\Registry;
 class Article extends Article_parent
 {
     /** @var array */
-    protected $_colorLabels = null;
+    protected $_colorLabels = ['Farbe', 'colour'];
 
     /** @var string */
     protected $_virtualMasterSku = null;
@@ -29,7 +29,7 @@ class Article extends Article_parent
         if ($this->_virtualMasterSku !== null) {
             return $this->_virtualMasterSku;
         }
-        $skuField = oxRegistry::getConfig()->getConfigParam('sArticleSkuField');
+        $skuField = Registry::getConfig()->getConfigParam('sArticleSkuField');
         $this->_virtualMasterSku = $this->getFieldData($skuField);
 
         $view = $this->getConfig()->getTopActiveView();
@@ -40,11 +40,9 @@ class Article extends Article_parent
                 $variant = $varSelections['oActiveVariant'];
                 $this->_virtualMasterSku = $variant->getFieldData($skuField);
             } elseif (isset($varSelections['selections']) && count($varSelections['selections'])) {
-                $colorLabels = $this->getEightSelectColorLabels();
-
                 /** @var SelectList $varSelectList */
                 foreach ($varSelections['selections'] as $varSelectList) {
-                    if (in_array($varSelectList->getLabel(), $colorLabels) && $varSelectList->getActiveSelection()) {
+                    if (in_array($varSelectList->getLabel(), $this->_colorLabels) && $varSelectList->getActiveSelection()) {
                         /** @var Selection $selection */
                         $selection = $varSelectList->getActiveSelection();
                         $fieldValue = strtolower($selection->getName());
@@ -56,22 +54,5 @@ class Article extends Article_parent
         }
 
         return $this->_virtualMasterSku;
-    }
-
-    /**
-     * Get EightSelect color labels
-     *
-     * @return array|null
-     */
-    protected function getEightSelectColorLabels()
-    {
-        if ($this->_colorLabels === null) {
-            $colorField = Registry::getConfig()->getConfigParam('SHOP_MODULE_sArticleColorField');
-            list(, $colorLabel) = explode(';', $colorField);
-
-            $this->_colorLabels = [$colorLabel];
-        }
-
-        return $this->_colorLabels;
     }
 }
