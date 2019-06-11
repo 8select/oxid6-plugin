@@ -16,7 +16,7 @@
   },
   "autoload": {
     "psr-4": {
-      "ASign\\EightSelect\\": "../../../modules/asign/8select"
+      "ASign\\EightSelect\\": "../../../source/modules/asign/8select"
     }
   }
 }
