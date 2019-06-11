@@ -6,13 +6,13 @@
 2. Modul entpacken und in das Shopverzeichnis source/moduls/asign/8select kopieren/hochladen
 3. Composer-Autoload-Pfad eintragen in Shoproot composer.json
 In der Node für autoload PSR-4 muss der folgende Eintrag hinzugefügt werden:
-`"ASign\\EightSelect\\": "./source/modules/asign/8select"`
-Beispiel:
-      "autoload": {
-        "psr-4": {
-          "ASign\\EightSelect\\": "./source/modules/asign/8select"
-        }
-      }
+```
+  "autoload": {
+    "psr-4": {
+      "ASign\\EightSelect\\": "./source/modules/asign/8select"
+    }
+  }
+```
 4. Anschließend muss der Composer Autoloader upgedatet werden: `composer dumpautoload`
 
 ## Activation & Configuration
