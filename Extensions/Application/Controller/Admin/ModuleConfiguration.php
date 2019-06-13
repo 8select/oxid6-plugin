@@ -2,9 +2,9 @@
 
 namespace ASign\EightSelect\Extensions\Application\Controller\Admin;
 
-use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Module\Module;
 use OxidEsales\Eshop\Core\Registry;
-use OxidEsales\Eshop\Core\TableViewNameGenerator;
+use OxidEsales\Eshop\Core\SeoEncoder;
 
 /**
  */
@@ -21,7 +21,7 @@ class ModuleConfiguration extends ModuleConfiguration_parent
     {
         $moduleId = $this->getEditObjectId();
         $lang = Registry::getLang();
-        $module = oxNew('oxModule');
+        $module = oxNew(Module::class);
 
         if ($moduleId === 'asign_8select' && $module->load($moduleId)) {
             // Check if config is complete: don't register API if not
@@ -33,8 +33,8 @@ class ModuleConfiguration extends ModuleConfiguration_parent
                 return;
             }
 
-            $baseUrl = $this->getConfig()->getShopUrl(0, false) . 'index.php?cl=eightselect_products_api&amp;';
-            $seoEncoder = oxNew('oxSeoEncoder');
+            $baseUrl = $this->getConfig()->getShopUrl(0, false) . 'index.php?cl=EightSelectAPI&amp;';
+            $seoEncoder = oxNew(SeoEncoder::class);
 
             $data = [
                 'api'    => [
