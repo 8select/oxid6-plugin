@@ -271,6 +271,7 @@ class Export extends Base
             ];
 
             if ($field === 'PICTURES') {
+                $this->data[$fieldData['name']]['value'] = [];
                 for ($i = 1; $i <= 12; $i++) {
                     $pictureField = 'OXPIC' . $i;
                     if ($articleData[$pictureField]) {
