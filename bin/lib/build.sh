@@ -22,12 +22,16 @@ rm -rf dist
 rm -rf .git*
 
 sed -i '' "s@__VERSION__@${VERSION}@g" metadata.php
+sed -i '' "s@__VERSION__@${VERSION}@g" composer.json
 
-TPL_PATH="views/blocks/base_style.tpl"
+TEMPLATE_PATH="Application/blocks/base_style.tpl"
+MODULE_CONFIG_PATH="Extensions/Application/Controller/Admin/ModuleConfiguration.php"
 
 if [ ${PROFILE} == 'production' ]
 then
-  sed -i '' "s@__SUBDOMAIN__@wgt@g" ${TPL_PATH}
+  sed -i '' "s@__SUBDOMAIN__@wgt@g" ${TEMPLATE_PATH}
+  sed -i '' "s@__SUBDOMAIN__@sc@g" ${MODULE_CONFIG_PATH}
 else
-  sed -i '' "s@__SUBDOMAIN__@wgt-prod.${PROFILE}@g" ${TPL_PATH}
+  sed -i '' "s@__SUBDOMAIN__@wgt-prod.${PROFILE}@g" ${TEMPLATE_PATH}
+  sed -i '' "s@__SUBDOMAIN__@sc-prod.${PROFILE}@g" ${MODULE_CONFIG_PATH}
 fi

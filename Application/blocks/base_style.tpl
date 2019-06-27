@@ -14,7 +14,7 @@
                 };
             }(w);
             var script = d.createElement(s);
-            script.src = 'https://wgt.8select.io/' + apiId + '/loader.js';
+            script.src = 'https://__SUBDOMAIN__.8select.io/' + apiId + '/loader.js';
             var entry = d.getElementsByTagName(s)[0];
             entry.parentNode.insertBefore(script, entry);
         })(document, 'script', window);

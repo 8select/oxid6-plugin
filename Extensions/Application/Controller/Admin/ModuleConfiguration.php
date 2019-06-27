@@ -10,7 +10,7 @@ use OxidEsales\Eshop\Core\SeoEncoder;
  */
 class ModuleConfiguration extends ModuleConfiguration_parent
 {
-    protected $_8selectUrl = 'https://sc-prod.staging.8select.io/';
+    protected $_8selectUrl = 'https://__SUBDOMAIN__.8select.io/';
 
     /**
      * connectToCSE
