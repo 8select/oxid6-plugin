@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OX>
+    <OXMENU id="mx_eightselect_admin_title">
+        <MAINMENU name="mx_eightselect_console" url="https://console.8select.io/" target="_blank" />
+    </OXMENU>
+</OX>

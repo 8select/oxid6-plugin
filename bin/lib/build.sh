@@ -1,6 +1,3 @@
-S3_ACCESS_KEY=$(aws --profile ${PROFILE} --region eu-central-1 cloudformation describe-stacks --stack-name product-feed-service-prod --query 'Stacks[0].Outputs[?OutputKey==`PluginUserAccessKeyId`].OutputValue' --output text)
-S3_ACCESS_KEY_SECRET=$(aws --profile ${PROFILE} --region eu-central-1 cloudformation describe-stacks --stack-name product-feed-service-prod --query 'Stacks[0].Outputs[?OutputKey==`PluginUserAccessKeySecret`].OutputValue' --output text)
-
 PLUGIN_NAME="CseEightselectBasic"
 
 DIST_DIR="dist"
@@ -13,8 +10,6 @@ echo "=========================="
 echo "BUILDING"
 echo "VERSION: ${VERSION}"
 echo "PROFILE: ${PROFILE}"
-echo "S3_ACCESS_KEY: ${S3_ACCESS_KEY}"
-echo "S3_ACCESS_KEY_SECRET: ${S3_ACCESS_KEY_SECRET}"
 echo "=========================="
 
 echo "Build at ${BUILD_DIR}"
@@ -26,19 +21,17 @@ rm -f bin/release.sh
 rm -rf dist
 rm -rf .git*
 
-sed -i '' "s@__VERSION__@${VERSION}@g" modules/asign/8select/metadata.php
+sed -i '' "s@__VERSION__@${VERSION}@g" metadata.php
+sed -i '' "s@__VERSION__@${VERSION}@g" composer.json
 
-TPL_PATH="modules/asign/8select/application/views/blocks/base_style.tpl"
-UPLOADER_PATH="modules/asign/8select/Model/Aws.php"
+TEMPLATE_PATH="Application/blocks/base_style.tpl"
+MODULE_CONFIG_PATH="Extensions/Application/Controller/Admin/ModuleConfiguration.php"
 
 if [ ${PROFILE} == 'production' ]
 then
-  sed -i '' "s@__SUBDOMAIN__@productfeed@g" ${UPLOADER_PATH}
-  sed -i '' "s@__SUBDOMAIN__@wgt@g" ${TPL_PATH}
+  sed -i '' "s@__SUBDOMAIN__@wgt@g" ${TEMPLATE_PATH}
+  sed -i '' "s@__SUBDOMAIN__@sc@g" ${MODULE_CONFIG_PATH}
 else
-  sed -i '' "s@__SUBDOMAIN__@productfeed-prod.${PROFILE}@g" ${UPLOADER_PATH}
-  sed -i '' "s@__SUBDOMAIN__@wgt-prod.${PROFILE}@g" ${TPL_PATH}
+  sed -i '' "s@__SUBDOMAIN__@wgt-prod.${PROFILE}@g" ${TEMPLATE_PATH}
+  sed -i '' "s@__SUBDOMAIN__@sc-prod.${PROFILE}@g" ${MODULE_CONFIG_PATH}
 fi
-
-sed -i '' "s@__S3_PLUGIN_USER_ACCESS_KEY__@${S3_ACCESS_KEY}@g" ${UPLOADER_PATH}
-sed -i '' "s@__S3_PLUGIN_USER_ACCESS_KEY_SECRET__@${S3_ACCESS_KEY_SECRET}@g" ${UPLOADER_PATH}
