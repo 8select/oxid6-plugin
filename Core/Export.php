@@ -24,7 +24,6 @@ class Export extends Base
         'oxpricea', 'oxpriceb', 'oxpricec',
     ];
 
-
     /**
      * Main export method: Calls sub methods to collect all required data
      *
@@ -37,7 +36,7 @@ class Export extends Base
     {
         $groupedFields = [];
         foreach ($fields as $fieldData) {
-            list($table,) = explode('.', $fieldData['name']);
+            list($table) = explode('.', $fieldData['name']);
             if (!isset($groupedFields[$table])) {
                 $groupedFields[$table] = [];
             }
@@ -130,7 +129,7 @@ class Export extends Base
         $categoryIds = DatabaseProvider::getDb()->getCol($categoryIdQuery, [$articleId]);
         $categoryPaths = $this->_getCategoryPaths($categoryIds);
         foreach ($categoryPaths as $i => $categoryPath) {
-            $this->data['oxcategory.' . $i] = ['label' => 'Category ' . $i, 'value' => $categoryPath,];
+            $this->data['oxcategory.' . $i] = ['label' => 'Category ' . $i, 'value' => $categoryPath];
         }
     }
 
@@ -223,13 +222,13 @@ class Export extends Base
      */
     protected function _buildVarNameFields($articleData, $tableFields)
     {
-        $varName = explode(' | ', $articleData['OXVARNAME']);
-        $varSelect = explode(' | ', $articleData['OXVARSELECT']);
+        $varName = explode('|', str_replace([' | ', ' |', '| '], '|', $articleData['OXVARNAME']));
+        $varSelect = explode('|', str_replace([' | ', ' |', '| '], '|', $articleData['OXVARSELECT']));
         $fullVarSelect = array_combine($varName, $varSelect);
         foreach ($tableFields as $fieldData) {
             $this->data[$fieldData['name']] = [
-                'label'           => $fieldData['label'],
-                'value'           => isset($fullVarSelect[$fieldData['label']]) ? $fullVarSelect[$fieldData['label']] : '',
+                'label' => $fieldData['label'],
+                'value' => isset($fullVarSelect[$fieldData['label']]) ? $fullVarSelect[$fieldData['label']] : '',
                 'isVariantDetail' => true,
             ];
         }
