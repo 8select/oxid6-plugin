@@ -160,7 +160,7 @@ class EightSelectAPI extends BaseController
      */
     protected function getLastExportDate()
     {
-        $log = oxNew('eightselect_log');
+        $log = oxNew(Log::class);
         $dateTime = $log->getLastSuccessExportDate(!$this->isDeltaExport());
         if (!$dateTime) {
             $dateTime = DatabaseProvider::getDb()->getOne('SELECT NOW()');
