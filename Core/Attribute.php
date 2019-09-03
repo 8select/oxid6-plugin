@@ -45,7 +45,7 @@ class Attribute extends Base
             $fields[] = ['name' => 'oxattribute.id=' . $attribute['OXID'], 'label' => $attribute['OXTITLE']];
         }
 
-        $maxCategoriesQuery = 'SELECT MAX(COUNTER) FROM (selEct COUNT(1) COUNTER FROM oxobject2category o2c JOIN oxarticles a ON o2c.OXOBJECTID = a.OXID JOIN oxcategories c ON c.OXID = o2c.OXCATNID  GROUP BY OXOBJECTID) tmp';
+        $maxCategoriesQuery = 'SELECT MAX(COUNTER) FROM (selEct COUNT(1) COUNTER FROM oxobject2category o2c JOIN oxarticles a ON o2c.OXOBJECTID = a.OXID JOIN oxcategories c ON c.OXID = o2c.OXCATNID  GROUP BY o2c.OXOBJECTID) tmp';
         $maxCategories = DatabaseProvider::getDb()->getOne($maxCategoriesQuery);
         for ($i = 0; $i < $maxCategories; $i++) {
             $fields[] = ['name' => 'oxcategory.' . $i, 'label' => 'Category ' . $i];
