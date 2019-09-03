@@ -136,7 +136,7 @@ class EightSelectAPI extends BaseController
         if (!$fullExport) {
             $dateTime = $this->getLastExportDate();
             $dateTime = DatabaseProvider::getDb()->quote($dateTime);
-            $where = "WHERE OXTIMESTAMP > $dateTime";
+            $where = "WHERE (OXPARENTID != '' OR OXVARSELECT != '') AND OXTIMESTAMP > $dateTime";
         }
 
         $requiredArticleFields = $this->getRequiredArticleFields();
