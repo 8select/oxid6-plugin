@@ -271,18 +271,7 @@ class Export extends Base
             ];
 
             if ($field === 'PICTURES') {
-                $this->data[$fieldData['name']]['value'] = [];
-                for ($i = 1; $i <= 12; $i++) {
-                    $pictureField = 'OXPIC' . $i;
-                    if ($articleData[$pictureField]) {
-                        if ($parent = $article->getParentArticle()) {
-                            $this->data[$fieldData['name']]['value'][] = $parent->getPictureUrl($i);
-                        } else {
-                            $this->data[$fieldData['name']]['value'][] = $article->getPictureUrl($i);
-                        }
-                    }
-                }
-
+                $this->data[$fieldData['name']]['value'] = $this->_getArticlePictures($article);
             } elseif ($field === 'BUYABLE') {
                 $this->data[$fieldData['name']]['value'] = $article->isBuyable() ? 1 : 0;
             } elseif ($field === 'SKU') {
@@ -290,6 +279,39 @@ class Export extends Base
                 $this->data[$fieldData['name']]['value'] = $article->getFieldData($articleSkuField);
             }
         }
+    }
+
+    /**
+     * _getArticlePictures
+     * -----------------------------------------------------------------------------------------------------------------
+     *
+     * @param Article $article
+     * @return array
+     */
+    protected function _getArticlePictures($article)
+    {
+        $pictures = [];
+
+        $hasVariantPictures = false;
+        for ($i = 1; $i <= 12; $i++) {
+            $pictureUrl = $article->getPictureUrl($i);
+            if (!is_null($pictureUrl) && strpos($pictureUrl, 'nopic.jpg') === false) {
+                $hasVariantPictures = true;
+
+                $pictures[] = $pictureUrl;
+            }
+        }
+
+        if (!$hasVariantPictures && ($parent = $article->getParentArticle())) {
+            for ($i = 1; $i <= 12; $i++) {
+                $pictureUrl = $parent->getPictureUrl($i);
+                if (!is_null($pictureUrl) && strpos($pictureUrl, 'nopic.jpg') === false) {
+                    $pictures[] = $pictureUrl;
+                }
+            }
+        }
+
+        return $pictures;
     }
 
     /**
