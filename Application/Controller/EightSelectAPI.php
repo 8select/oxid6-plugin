@@ -31,6 +31,8 @@ class EightSelectAPI extends BaseController
         'product.SKU',
         'product.BUYABLE',
     ];
+    /** @var int */
+    protected $totalArticlesSum;
 
     /**
      * Check credentials submitted in header
@@ -132,13 +134,9 @@ class EightSelectAPI extends BaseController
 
         $where = '';
         if (!$fullExport) {
-            $log = oxNew(Log::class);
-            $dateTime = $log->getLastSuccessExportDate($fullExport);
-            if (!$dateTime) {
-                $dateTime = DatabaseProvider::getDb()->getOne('SELECT NOW()');
-            }
+            $dateTime = $this->getLastExportDate();
             $dateTime = DatabaseProvider::getDb()->quote($dateTime);
-            $where = "WHERE OXTIMESTAMP > $dateTime";
+            $where = "WHERE (OXPARENTID != '' OR (OXVARNAME = '' AND OXVARSELECT = '')) AND OXTIMESTAMP > $dateTime";
         }
 
         $requiredArticleFields = $this->getRequiredArticleFields();
@@ -153,6 +151,22 @@ class EightSelectAPI extends BaseController
         $log->setLastSuccessExportDate($fullExport);
 
         return $data;
+    }
+
+    /**
+     * Loads datetime of last export
+     *
+     * @return string
+     */
+    protected function getLastExportDate()
+    {
+        $log = oxNew(Log::class);
+        $dateTime = $log->getLastSuccessExportDate(!$this->isDeltaExport());
+        if (!$dateTime) {
+            $dateTime = DatabaseProvider::getDb()->getOne('SELECT NOW()');
+        }
+
+        return $dateTime;
     }
 
     /**
@@ -273,9 +287,21 @@ class EightSelectAPI extends BaseController
      */
     protected function getTotalArticlesSum()
     {
-        $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
+        if (is_null($this->totalArticlesSum)) {
+            $view = Registry::get(TableViewNameGenerator::class)->getViewName('oxarticles');
+            $fullExport = !$this->isDeltaExport();
 
-        return (int) DatabaseProvider::getDb()->getOne("SELECT COUNT(1) FROM $view");
+            $where = '';
+            if (!$fullExport) {
+                $dateTime = $this->getLastExportDate();
+                $dateTime = DatabaseProvider::getDb()->quote($dateTime);
+                $where = "WHERE OXTIMESTAMP > $dateTime";
+            }
+
+            $this->totalArticlesSum = (int) DatabaseProvider::getDb()->getOne("SELECT count(1) FROM $view $where");
+        }
+
+        return $this->totalArticlesSum;
     }
 
     /**
