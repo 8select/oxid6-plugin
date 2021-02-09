@@ -49,7 +49,9 @@ vendor/bin/oe-console oe:module:install-configuration source/modules/asign/8sele
 
 ![connect.with-cse](./oxid-connect-with-cse.png)
 
-- Im Anschluss in der [8SELECT Management Console](https://console.8select.io) einloggen und die Konfiguration Ihrer Produktdaten vornehmen - dies funktioniert exakt [wie für unser Shopware Plugin](https://knowledge.8select.com/knowledge/konfiguration-shopware-plugin).
+Jetzt werden die Produktdaten aus dem Shop an 8SELECT übertragen und weiterverarbeitet. Nach ca. 24h steht der erste Content zur Verfügung.
+
+Ob die Frontend Integration fehlerfrei funktioniert, kann mit Hilfe des Demo Modus getestet werden. Einfach den Parameter `8s-demo=true` an die URL hängen, z.B. `https://www.my-shop.com/page?8s-demo=true`.
 
 
 ## Deinstallation
